@@ -30,4 +30,12 @@ public Be.Fgov.Ehealth.Samws.V2.Core.TextType Title { get; set; }
 Handmatige resolutio naar logische situatie (alle Text255Type veranderd naar TextType (meer permissive)
 
 voor deze: 
-- Text
+- 'Title' : [System.Xml.Serialization.XmlElementAttribute("Title", Namespace="urn:be:fgov:ehealth:samws:v2:reimbursementlaw:submit")]
+- 'Type' : [System.Xml.Serialization.XmlElementAttribute("Type", Namespace="urn:be:fgov:ehealth:samws:v2:reimbursementlaw:submit")]
+- 'AdditionalInformation' : [System.Xml.Serialization.XmlElementAttribute("AdditionalInformation", Namespace="urn:be:fgov:ehealth:samws:v2:actual:common")]
+- 'Impact' : [System.Xml.Serialization.XmlElementAttribute("Impact", Namespace="urn:be:fgov:ehealth:samws:v2:actual:common")]
+
+
+urn:be:fgov:ehealth:samws:v2:actual:common
+[System.Xml.Serialization.XmlElementAttribute("Impact", Namespace="urn:be:fgov:ehealth:samws:v2:actual:common")]
+

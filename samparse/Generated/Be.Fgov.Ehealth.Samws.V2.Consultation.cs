@@ -9858,13 +9858,13 @@ namespace Be.Fgov.Ehealth.Samws.V2.Consultation
         [System.Xml.Serialization.XmlElementAttribute("Content", Namespace="urn:be:fgov:ehealth:samws:v2:reimbursementlaw:submit")]
         public Be.Fgov.Ehealth.Samws.V2.Core.TextType Content { get; set; }
         
-        /// <summary>
-        /// <para>ALINEA, POINT</para>
-        /// </summary>
-        [System.ComponentModel.DescriptionAttribute("ALINEA, POINT")]
-        [System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
-        [System.Xml.Serialization.XmlElementAttribute("Type", Namespace="urn:be:fgov:ehealth:samws:v2:reimbursementlaw:submit")]
-        public Be.Fgov.Ehealth.Samws.V2.Reimbursementlaw.Submit.LegalTextTypeType Type { get; set; }
+        ///// <summary>
+        ///// <para>ALINEA, POINT</para>
+        ///// </summary>
+        //[System.ComponentModel.DescriptionAttribute("ALINEA, POINT")]
+        //[System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
+        //[System.Xml.Serialization.XmlElementAttribute("Type", Namespace="urn:be:fgov:ehealth:samws:v2:reimbursementlaw:submit")]
+        //public Be.Fgov.Ehealth.Samws.V2.Reimbursementlaw.Submit.LegalTextTypeType Type { get; set; }
         
         /// <summary>
         /// <para xml:lang="en">Minimum inclusive value: 0.</para>

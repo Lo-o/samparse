@@ -1395,7 +1395,7 @@ namespace Be.Fgov.Ehealth.Samws.V2.Export
         /// </summary>
         [System.ComponentModel.DescriptionAttribute("Additional (textual) information about the active ingredient.")]
         [System.Xml.Serialization.XmlElementAttribute("AdditionalInformation", Namespace="urn:be:fgov:ehealth:samws:v2:actual:common")]
-        public Be.Fgov.Ehealth.Samws.V2.Core.Text255Type AdditionalInformation { get; set; }
+        public Be.Fgov.Ehealth.Samws.V2.Core.TextType AdditionalInformation { get; set; }
         
         [System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
         [System.Xml.Serialization.XmlElementAttribute("Substance")]
@@ -3107,7 +3107,7 @@ namespace Be.Fgov.Ehealth.Samws.V2.Export
             ", Dutch, German and English. When it is specified, French and Dutch versions are" +
             " mandatory and others are optional."))]
         [System.Xml.Serialization.XmlElementAttribute("Impact", Namespace="urn:be:fgov:ehealth:samws:v2:actual:common")]
-        public Be.Fgov.Ehealth.Samws.V2.Core.Text255Type Impact { get; set; }
+        public Be.Fgov.Ehealth.Samws.V2.Core.TextType Impact { get; set; }
         
         /// <summary>
         /// <para>Indication whether or not there is still a limited stock of the medicine at the company.</para>
@@ -4393,11 +4393,11 @@ namespace Be.Fgov.Ehealth.Samws.V2.Export
         
         [System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
         [System.Xml.Serialization.XmlElementAttribute("Title", Namespace="urn:be:fgov:ehealth:samws:v2:reimbursementlaw:submit")]
-        public Be.Fgov.Ehealth.Samws.V2.Core.Text255Type Title { get; set; }
+        public Be.Fgov.Ehealth.Samws.V2.Core.TextType Title { get; set; }
         
-        [System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
-        [System.Xml.Serialization.XmlElementAttribute("Type", Namespace="urn:be:fgov:ehealth:samws:v2:reimbursementlaw:submit")]
-        public Be.Fgov.Ehealth.Samws.V2.Reimbursementlaw.Submit.LegalBasisTypeType Type { get; set; }
+        //[System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
+        //[System.Xml.Serialization.XmlElementAttribute("Type", Namespace="urn:be:fgov:ehealth:samws:v2:reimbursementlaw:submit")]
+        //public Be.Fgov.Ehealth.Samws.V2.Reimbursementlaw.Submit.LegalBasisTypeType Type { get; set; }
         
         [System.Xml.Serialization.XmlElementAttribute("EffectiveOn", Namespace="urn:be:fgov:ehealth:samws:v2:reimbursementlaw:submit", DataType="date")]
         public System.DateTime EffectiveOn { get; set; }
@@ -4595,13 +4595,13 @@ namespace Be.Fgov.Ehealth.Samws.V2.Export
         [System.Xml.Serialization.XmlElementAttribute("Title", Namespace="urn:be:fgov:ehealth:samws:v2:reimbursementlaw:submit")]
         public Be.Fgov.Ehealth.Samws.V2.Core.TextType Title { get; set; }
         
-        /// <summary>
-        /// <para>ARTICLE, CHAPTER, PARAGRAPH, SECTION</para>
-        /// </summary>
-        [System.ComponentModel.DescriptionAttribute("ARTICLE, CHAPTER, PARAGRAPH, SECTION")]
-        [System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
-        [System.Xml.Serialization.XmlElementAttribute("Type", Namespace="urn:be:fgov:ehealth:samws:v2:reimbursementlaw:submit")]
-        public Be.Fgov.Ehealth.Samws.V2.Reimbursementlaw.Submit.LegalReferenceTypeType Type { get; set; }
+        ///// <summary>
+        ///// <para>ARTICLE, CHAPTER, PARAGRAPH, SECTION</para>
+        ///// </summary>
+        //[System.ComponentModel.DescriptionAttribute("ARTICLE, CHAPTER, PARAGRAPH, SECTION")]
+        //[System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
+        //[System.Xml.Serialization.XmlElementAttribute("Type", Namespace="urn:be:fgov:ehealth:samws:v2:reimbursementlaw:submit")]
+        //public Be.Fgov.Ehealth.Samws.V2.Reimbursementlaw.Submit.LegalReferenceTypeType Type { get; set; }
         
         [System.Xml.Serialization.XmlElementAttribute("FirstPublishedOn", Namespace="urn:be:fgov:ehealth:samws:v2:reimbursementlaw:submit", DataType="date")]
         public System.DateTime FirstPublishedOn { get; set; }
@@ -5031,13 +5031,13 @@ namespace Be.Fgov.Ehealth.Samws.V2.Export
         [System.Xml.Serialization.XmlElementAttribute("Content", Namespace="urn:be:fgov:ehealth:samws:v2:reimbursementlaw:submit")]
         public Be.Fgov.Ehealth.Samws.V2.Core.TextType Content { get; set; }
         
-        /// <summary>
-        /// <para>ALINEA, POINT</para>
-        /// </summary>
-        [System.ComponentModel.DescriptionAttribute("ALINEA, POINT")]
-        [System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
-        [System.Xml.Serialization.XmlElementAttribute("Type", Namespace="urn:be:fgov:ehealth:samws:v2:reimbursementlaw:submit")]
-        public Be.Fgov.Ehealth.Samws.V2.Reimbursementlaw.Submit.LegalTextTypeType Type { get; set; }
+        ///// <summary>
+        ///// <para>ALINEA, POINT</para>
+        ///// </summary>
+        //[System.ComponentModel.DescriptionAttribute("ALINEA, POINT")]
+        //[System.ComponentModel.DataAnnotations.RequiredAttribute(AllowEmptyStrings=true)]
+        //[System.Xml.Serialization.XmlElementAttribute("Type", Namespace="urn:be:fgov:ehealth:samws:v2:reimbursementlaw:submit")]
+        //public Be.Fgov.Ehealth.Samws.V2.Reimbursementlaw.Submit.LegalTextTypeType Type { get; set; }
         
         /// <summary>
         /// <para xml:lang="en">Minimum inclusive value: 0.</para>
