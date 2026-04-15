@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns="urn:be:fgov:ehealth:samws:v2:actual:imported"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:core="urn:be:fgov:ehealth:samws:v2:core"
+  targetNamespace="urn:be:fgov:ehealth:samws:v2:actual:imported"
+  elementFormDefault="qualified"
+  attributeFormDefault="unqualified"
+  version="6.0">
+  <xs:import namespace="urn:be:fgov:ehealth:samws:v2:core"
+    schemaLocation="../common/SamCommonItems.xsd" />
+  <!--TODO Publication Services - currently publication only foreseen via DBCR Insert -->
+  <xs:complexType name="ImportedMedicinalProductPackageKeyType">
+    <xs:attribute name="Id" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation> 12 bytes hexadecimal unique number </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="ImportedMedicinalProductPackageType">
+    <xs:complexContent>
+      <xs:extension base="ImportedMedicinalProductPackageKeyType">
+        <xs:sequence>
+          <xs:group ref="ImportedMedicinalProductPackageFields"/>
+          <xs:group ref="ImportedMedicinalProductPackageReferences"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:group name="ImportedMedicinalProductPackageFields">
+    <xs:sequence>
+      <xs:element name="Name" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>
+            Name of the imported medicinal product </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Country" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>
+            Country of origin of the package, as ISO 3166-1 alpha-2 code </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Strength" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Strength of the imported medicinal product as free text </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="PackSize" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Pack Size as free text </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Notes" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Additional information on the imported medicinal product package </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="CNK" type="core:DmppCodeType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Public CNK code of the Imported Medicinal Product Package </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+  <xs:group name="ImportedMedicinalProductPackageReferences">
+    <xs:sequence>
+      <xs:element name="VmpCode" type="core:VmpKeyType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Link to the corresponding VMP </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="ActiveSubstanceCode" type="core:String10Type" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>
+            List of Active Substances of the imported medicinal product </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="PharmaceuticalFormCode" type="core:String10Type" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>
+            List of Pharmaceutical Forms of the imported medicinal product </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="RouteOfAdministrationCode" type="core:String10Type" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation>
+            List of Route of Administrations of the imported medicinal product </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="PackagingTypeCode" type="core:String10Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Packaging Type of the imported medicinal product </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+  <xs:complexType name="ReimbursedImportedMedicinalProductPackageKeyType">
+    <xs:attribute name="ImppId" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation> 12 bytes hexadecimal unique number </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="DeliveryEnvironment" type="core:DeliveryEnvironmentType" use="required">
+      <xs:annotation>
+        <xs:documentation>Type of environment in which a medicinal product is delivered.
+          Possible values :
+          - ‘P’ for Public,
+          - ‘A’ for Ambulatory,
+          - ‘H’ for Hospital,
+          - ‘R’ For Residential care
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="Code" type="core:DmppCodeType" use="required">
+      <xs:annotation>
+        <xs:documentation>Code number used to uniquely identify a package or a group of packages
+          being delivered in a given environment and reimbursed according to the same rules.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="CodeType" type="core:DmppCodeTypeType" use="required">
+      <xs:annotation>
+        <xs:documentation>Type of the mentioned code, among the following:
+          - ‘CNK’: Code National – Nationale Kode . This code is attributed by the APB (“Association
+          Pharmaceutique Belge”) to identify unequivocally one medicinal product package, or by the
+          NIHDI for identifying tarification units, which meet to the same reimbursement criteria.
+          - ‘PSEUDO’: Pseudo-code used for the flat-pricing of drugs in certain environments such as
+          radiopharmaca in hospitals.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="ReimbursedImportedMedicinalProductPackageType">
+    <xs:complexContent>
+      <xs:extension base="ReimbursedImportedMedicinalProductPackageKeyType">
+        <xs:sequence>
+          <xs:group ref="ReimbursedImportedMedicinalProductPackageFields"/>
+          <xs:group ref="ReimbursedImportedMedicinalProductPackageReferences"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:group name="ReimbursedImportedMedicinalProductPackageFields">
+    <xs:sequence>
+      <xs:element name="PricingUnitQuantity" type="core:Decimal20d4Type">
+        <xs:annotation>
+          <xs:documentation>
+            Amount of the pricing (tarification) unit. Example: ‘1’ in ‘1 comprimé’ If standardized,
+            units are represented using the UCUM (Unified Code for Units of Measure) standard, but
+            do not link to the Standard Units reference table. Non standard units include </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="PricingUnitLabel" type="core:Text255Type">
+        <xs:annotation>
+          <xs:documentation>
+            Unit associated to the Pricing Unit Quantity. If standardized, units are represented
+            using the UCUM (Unified Code for Units of Measure) standard, but do not link to the
+            Standard Units reference table. Example: ‘comprimé’ in ‘1 comprimé’ </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="LegalText" type="core:TextType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Contains the corresponding paragraph text as plain unformatted text. Available in French
+            and Dutch. </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="AddedDocument" type="core:TextType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation> Contains the
+            document necessary for requesting reimbursement as plain unformatted text. Available in
+            French and Dutch. </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+  <xs:group name="ReimbursedImportedMedicinalProductPackageReferences">
+    <xs:sequence>
+      <xs:element name="ReimbursementCriterionCategory" type="core:String10Type"/>
+      <xs:element name="ReimbursementCriterionCode" type="core:String20Type"/>
+    </xs:sequence>
+  </xs:group>
+</xs:schema>

@@ -1,0 +1,730 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2014 rel. 2 sp1 (x64) (http://www.altova.com) by ﻿SMALS (SMALS) -->
+<xs:schema xmlns="urn:be:fgov:ehealth:samws:v2:chapteriv:submit"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:core="urn:be:fgov:ehealth:samws:v2:core"
+           targetNamespace="urn:be:fgov:ehealth:samws:v2:chapteriv:submit"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified"
+           version="6.0">
+
+  <xs:import namespace="urn:be:fgov:ehealth:samws:v2:core"
+             schemaLocation="../common/SamCommonItems.xsd"/>
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="../common/xml.xsd"/>
+  <xs:element name="AddParagraphRequest" type="AddParagraphRequestType"/>
+  <xs:element name="RemoveParagraphRequest" type="RemoveParagraphRequestType"/>
+  <xs:element name="AddQualificationListRequest" type="AddQualificationListRequestType"/>
+  <xs:element name="RemoveQualificationListRequest" type="RemoveQualificationListRequestType"/>
+  <xs:element name="AddNameExplanationRequest" type="AddNameExplanationRequestType"/>
+  <xs:element name="RemoveNameExplanationRequest" type="RemoveNameExplanationRequestType"/>
+  <xs:element name="AddParagraphResponse" type="core:StandardResponseType"/>
+  <xs:element name="RemoveParagraphResponse" type="core:StandardResponseType"/>
+  <xs:element name="AddQualificationListResponse" type="core:StandardResponseType"/>
+  <xs:element name="RemoveQualificationListResponse" type="core:StandardResponseType"/>
+  <xs:element name="AddNameExplanationResponse" type="core:StandardResponseType"/>
+  <xs:element name="RemoveNameExplanationResponse" type="core:StandardResponseType"/>
+  <xs:complexType name="AddParagraphRequestType">
+    <xs:sequence>
+      <xs:element name="Paragraph" type="AddParagraphType"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="RemoveParagraphRequestType">
+    <xs:sequence>
+      <xs:element name="Paragraph" type="RemoveParagraphType"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="AddQualificationListRequestType">
+    <xs:sequence>
+      <xs:element name="QualificationList" type="AddQualificationListType"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="RemoveQualificationListRequestType">
+    <xs:sequence>
+      <xs:element name="QualificationList" type="RemoveQualificationListType"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="AddNameExplanationRequestType">
+    <xs:sequence>
+      <xs:element name="NameExplanation" type="AddNameExplanationType"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="RemoveNameExplanationRequestType">
+    <xs:sequence>
+      <xs:element name="NameExplanation" type="RemoveNameExplanationType"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ParagraphKeyType">
+    <xs:attribute name="ChapterName" type="core:String10Type" use="required">
+      <xs:annotation>
+        <xs:documentation>The name of the chapter involved in the reimbursement conditions of medicines as stated in the royal decree of 21 December 2001 and the royal decrees modifying this one. Attention has to be paid that this name should continue to be unique even if other legislations equally produce chapters on the reimbursement of medicines.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="ParagraphName" type="core:String10Type" use="required">
+      <xs:annotation>
+        <xs:documentation>The name of the paragraph or the subparagraph, which for the presumed chapters (see below), is limited to an identification number. The last 4 numbers representing variations within the same subject. Although currently no letter has made an appearance, the option to restrict this name only to numbers is not imposed.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="ParagraphType">
+    <xs:complexContent>
+      <xs:extension base="ParagraphKeyType">
+        <xs:sequence>
+          <xs:group ref="ParagraphFields"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="AddParagraphType">
+    <xs:complexContent>
+      <xs:extension base="ParagraphType">
+        <xs:sequence>
+          <xs:element name="ParagraphTrace" type="AddParagraphTraceType" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element name="Exclusion" type="AddExclusionType" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element name="Verse" type="AddVerseType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attributeGroup ref="core:actionPeriod"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="RemoveParagraphType">
+    <xs:complexContent>
+      <xs:extension base="ParagraphKeyType">
+        <xs:attributeGroup ref="core:actionPeriod"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:group name="ParagraphFields">
+    <xs:sequence>
+      <xs:element name="KeyStringNl" type="core:String500Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>String of characters covering the most representative key words (in NL) of the paragraph content.  Words are not taken independently of one another in order to make an index, but rather to univocally express the primary destination of the paragraph, hereby avoiding ambiguities and removing possible redundancies with other paragraphs.   </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="KeyStringFr" type="core:String500Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Idem as KEY_STRING_NL but covering key words in FR.   </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="AgreementType" type="AgreementTypeType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Value identifying the authorisation model and therefore also the documents  delivered by the  insurance organisation to the patient. If only one authorization model is defined for the paragraph, it is stored in this field. If there is a different model to be delivered in case of prolongation of an existing agreement, this field contains the authorizations model in case of a new or first request.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="ProcessType" type="core:Number1Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>information reserved to insurance organisations</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="LegalReference" type="core:String100Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>References to the legal text that created this paragraph for the first time. Not to be confused with Legal Reference Path.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="PublicationDate" type="xs:date" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Date of the first publication of the paragraph in the reference specified by LEGAL_REFERENCE. </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="ModificationDate" type="xs:date" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Date of the last update of the content of the paragraph. This can be an update of the text  inside the verses or an update of the parameters saved within the entity PARAGRAPH, except for modifications concerning the amounts of the reimbursements. The entity REIMBURSEMENT will handle its history independently of the paragraph history.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="ProcessTypeOverrule" type="core:String10Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>information reserved to insurance organisations  </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="ParagraphVersion" type="core:Number4Type">
+        <xs:annotation>
+          <xs:documentation>Number of modifications applied to this record, starting with 1 for the initial version.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="AgreementTypePro" type="AgreementTypeType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Value identifying the authorisation model in case of prolongation of an agreement. Null means that first and renewal authorisation are the same;  see AGREEMENT_TYPE.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+  <xs:complexType name="ExclusionKeyType">
+    <xs:attribute name="ExclusionType" type="ExclusionTypeType" use="required">
+      <xs:annotation>
+        <xs:documentation>What is the type of formulation used to express the exclusion of this medicine in the reimbursement possibilities for this patient. In other ways, in what form has the exclusion been formulated in the legislation text, according to a speciality, an active substance, a group of medicines, an enumeration, … Type ‘T’ refers to the text itself when the exclusion could not be structured in any other type of formulation.
+
+          Domain (¡Attention! Domain changes in respect to SAM v1!):
+          T : Text  => VERSE_NUM of the verse containing the text of the exclusion
+          C : Criteria  => reimbursement criterion fixed by the NIHDI
+          A : ATC Code  => ATC code
+          D : Cluster Code  => VMP_ ID
+          J : Paragraph = PARAGRAPH NAME
+          I   : Internal  => all specialities (CNK’s) attached to the PARAGRAPH via Reimbursement Context with the same Legal Reference Path
+          K :  Packaged product = AMPP  =>  CNK Identifier
+          E : Exception => Certain medicines within a classification can nevertheless be the subject of a reimbursement authorisation.
+          V: New: VTM Code of a Virtual Therapeutic Moiety in SAM v2. All specialties linked to this VTM throuthe VTM – VMP – AMP links.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="IdentifierNum" type="core:String10Type" use="required">
+      <xs:annotation>
+        <xs:documentation>Identifier in another entity of the term excluding the reimbursement. The determination of the entity is made thanks to the field EXCLUSION_TYPE. (The implementation of these identifiers in one or several fields remains the domain of the physical structuring)</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="ExclusionType">
+    <xs:complexContent>
+      <xs:extension base="ExclusionKeyType">
+        <xs:sequence>
+          <xs:group ref="ExclusionFields"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="AddExclusionType">
+    <xs:complexContent>
+      <xs:extension base="ExclusionType"/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:group name="ExclusionFields">
+    <xs:sequence/>
+  </xs:group>
+  <xs:complexType name="VerseKeyType">
+    <xs:attribute name="VerseSeq" type="core:Number2Type" use="required">
+      <xs:annotation>
+        <xs:documentation>Sequence number of the verse within the paragraph. This number enables among other things to rearrange the original legislation text.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="VerseType">
+    <xs:complexContent>
+      <xs:extension base="VerseKeyType">
+        <xs:sequence>
+          <xs:group ref="VerseFields"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="AddVerseType">
+    <xs:complexContent>
+      <xs:extension base="VerseType">
+        <xs:sequence>
+          <xs:element name="AddedDocument" type="AddAddedDocumentType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:group name="VerseFields">
+    <xs:sequence>
+      <xs:element name="VerseNum" type="core:Number6Type">
+        <xs:annotation>
+          <xs:documentation>Unique number assigned to a verse, among all the verses of the database. This number enables among others to handle the different versions modified.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="VerseSeqParent" type="core:Number2Type">
+        <xs:annotation>
+          <xs:documentation>Pointer towards the parent verse of the actual verse. The notion of parent is essential in the hierarchical structuring of the paragraph in verses. In fact, the alternatives are always arranged side by side underneath a header verse. This header does not only group the alternatives of the same level, but also specifies the minimum number of choices to make within these alternatives one level lower.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="VerseLevel" type="core:Number2Type">
+        <xs:annotation>
+          <xs:documentation>Position of the verse in the hierarchy of the paragraph, this number gives the level of the current verse compared to the other verses.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="VerseType" type="VerseTypeType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Type of the verses, according to the content of the verse the type will be diagnostic, condition, exclusion, notification , title, warnings, …
+            Currently only value “E” is used to indicate where the verse stipulates exclusion restrictions.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="CheckBoxInd" type="xs:boolean">
+        <xs:annotation>
+          <xs:documentation>Does the current verse represent a choice among several alternatives of the same level ? If so a flag must be set in the interface, this field enables to indicate this characteristic.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="MinCheckNum" type="core:Number2Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Minimum amount of choices to be made within the verses one level higher (level + 1) - uninterrupted by a lower level - in order for the choice to be validated according to the legislation. So every verse with a checkbox has to have a parent verse with a granted MIN_CHECK_NUM. And vice versa, every verse with a value > 0 for MIN_CHECK_NUM has to have minimum two children verses with CHECK_BOX_IND equal to ‘True’.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="AndClauseNum" type="core:Number6Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Number of the group for which several branches are involved in order to realise a coherent choice. If the valid choice foresees to mark several verses in different non contiguous parts of the paragraph, and therefore in branches not depending on the same parent, grouping according to a random number is planned.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="TextFr" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>French version of the part of the legislation text within the verse.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="TextNl" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Dutch version of the part of the legislation text within the verse.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="RequestType" type="RequestTypeType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>The reimbursement requests can be made for a first prescription of a medicine or for the prolongation of an already prescribed medicine for this patient. The legislation text may itself  allude to one or the other of these options. The verse can thus itself be dedicated to a request of the type prescription prolongation or to a first request. Not all the verses are required for these two types of requests, this indicator enables to formalise the application field of the verse. ‘Null’, the default option, represents the common option, this means that the verse is valid for a first prescription as well as for a prolongation.
+            N = New request,  P = Renewal  (prolongation), ‘Null’ = both (N and P)</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="AgreementTerm" type="core:Number3Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>In accordance with the field AGREEMENT_TERM_UNIT, the number of units of periods during which the authorisation of the reimbursement is valid.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="AgreementTermUnit" type="DurationUnitType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Unit in which the validity period of the reimbursement authorisation is expressed.
+            ‘D’  days / ‘M’ months / ‘W’ weeks / ‘Y’ years</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="MaxPackageNumber" type="core:Number3Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>The maximum number of packages reimbursed during the period of reimbursement authorisation.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="PurchasingAdvisorQualList" type="core:String10Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>The prescription of certain medicines is limited to certain recognised medical profiles. If the profession does not have a well-established code or if there are several authorised codes to prescribe or if there is a list with the names of authorised prescribers, an exhaustive list will be set up mentioning either the codes or the names and will be saved in an entity ad hoc. The term by which this list will be known, will be saved in this field.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="LegalReference" type="core:String100Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>The references to the legal text for a verse are only justified if these are different from the ones of the paragraph. It will therefore always be a modification subsequent to the initial creation of the paragraph.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="ModificationDate" type="xs:date" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>The date of the modification of the verse will be set only if this one is different from the PUBLICATION_DATE of the paragraph. This difference in date can occur if a modification is done for one particular verse or if a new verse is added to the paragraph. If any part of the paragraph text changes the MODIFICATION_DATE of the paragraph, the paragraph must find at least one echo among the MODIFICATION_DATEs of the verses. Only parameter changes on paragraph level can create a singularity, a change in PROCESS_TYPE or KEY_STRING.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="AgreementYearMax" type="core:Number2Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>The maximum number of years during which the reimbursement authorisation is valid.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="AgreementRenewalMax" type="core:Number3Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>The maximum number of renewals allowed for this agreement.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="SexRestricted" type="SexRestrictedType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Does there exist an inadequacy between the medicine and one of the two sexes ?
+            ‘F’ = Female restriction, ‘M’ = Male restriction</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="MinimumAgeAuthorized" type="core:Decimal3d1Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>If there is a restriction in relation to the minimum age of the patient for this medicine, this field gives the lower bound of the number. The minimum age is ‘inclusive’, i.e. permitting higher values. E.g. value 2 means “2 or older” or “at least 2”.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="MinimumAgeAuthorizedUnit" type="DurationUnitType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Unit for the minimum age of the patient for this medicine.
+            D(ays), W(eeks), M(onths), Y(ears)</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="MaximumAgeAuthorized" type="core:Decimal3d1Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>If the medicine can only be reimbursed for a patient who has past a certain age, this field gives this upper bound.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="MaximumAgeAuthorizedUnit" type="DurationUnitType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Unit for the maximum age of the patient for this medicine.
+            D(ays), W(eeks), M(onths), Y(ears)</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="MaximumContentQuantity" type="core:Decimal12d3Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Maximum number of medicinal product unities (tablets, ampoules, ...) or maximum volume of a solution that is reimbursed during a certain period.
+            Alias: MAX_CQ
+            E.g. paragraph 1880000, MAX_CQ=364 (13 x 28)  in :
+            " De machtiging tot vergoeding op basis van de in 1) vermelde voorwaarden wordt verleend voor hernieuwbare periodes van 12 maanden en wordt beperkt tot maximum 13 verpakkingen van 28 x 75 mg per periode of tot maximum 1 verpakking van 28 x 75 mg en 4 verpakkingen van 84 x 75 mg per periode.”</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="MaximumContentUnit" type="core:String5Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Unit for the maximum number of medicinal product unities (tablets, ampoules, ...) or maximum volume of a solution that is reimbursed during a certain period.
+            Alias: MAX_CU
+            E.g. paragraph 1880000, MAX_CU=unit in :
+            " De machtiging tot vergoeding op basis van de in 1) vermelde voorwaarden wordt verleend voor hernieuwbare periodes van 12 maanden en wordt beperkt tot maximum 13 verpakkingen van 28 x 75 mg per periode of tot maximum 1 verpakking van 28 x 75 mg en 4 verpakkingen van 84 x 75 mg per periode.”</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="MaximumStrengthQuantity" type="core:Decimal12d3Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Strength of the unities (tablets, ampoules, ..) or strength of the solution in the maximum daily posology during a certain period.
+            Alias: MAX_SQ
+            E.g. paragraph 1250000, MAX_SQ = 40 in :
+            "De patiënt bij wie endoscopie of, in geval van onmogelijkheid gestaafd
+            door documenten, het radiografie-onderzoek een maagulcus aantoont,
+            kan terugbetaling krijgen voor :
+            - een behandeling met een maximum posologie van 40 mg per dag
+            gedurende 8 weken;"</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="MaximumStrengthUnit" type="core:String5Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Unit of Strength of the unities (tablets, ampoules, ..) or strength of the solution in the maximum daily posology reimbursed during a certain period.
+            Alias: MAX_SU
+            E.g. paragraph 1250000, MAX_SU= mg in :
+            "De patiënt bij wie endoscopie of, in geval van onmogelijkheid gestaafd
+            door documenten, het radiografie-onderzoek een maagulcus aantoont,
+            kan terugbetaling krijgen voor :
+            - een behandeling met een maximum posologie van 40 mg per dag
+            gedurende 8 weken;"</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="MaximumDurationQuantity" type="core:Decimal12d3Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Numerical value in the expression of the duration of reimbursement for a maximum daily posology. In exceptional cases, the numerical value in the expression of the administration frequency may be stored in this field instead.
+            Alias: MAX_DURQ
+            E.g.  paragraph 1250000, MAX_DURQ= 8 in :
+            "De patiënt bij wie endoscopie of, in geval van onmogelijkheid gestaafd
+            door documenten, het radiografie-onderzoek een maagulcus aantoont,
+            kan terugbetaling krijgen voor :
+            - een behandeling met een maximum posologie van 40 mg per dag
+            gedurende 8 weken;"</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="MaximumDurationUnit" type="DurationUnitType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Unit to express the duration of reimbursement for a maximum daily posology. In exceptional cases, the unit in the expression of the administration frequency may be stored in this field instead.
+            Alias: MAX_DURU
+            E.g. paragraph 1250000, MAX_DURU= 'weeks' in :
+            "De patiënt bij wie endoscopie of, in geval van onmogelijkheid gestaafd
+            door documenten, het radiografie-onderzoek een maagulcus aantoont,
+            kan terugbetaling krijgen voor :
+            - een behandeling met een maximum posologie van 40 mg per dag
+            gedurende 8 weken;"</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="OtherAddedDocumentInd" type="xs:boolean" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Are there complementary documents that are indispensable to take a decision concerning the reimbursement authorisation ? Attention, this indicator is not a denormalisation of the electronic documents specified within  ADDED_DOCUMENT, it references the medical documents that are part of the patient file and for which there does not exist an electronic version in this DB. In order to know if there are complementary documents to deliver, one should not only verify if there are no occurrences of document in the entity ADDED_DOCUMENT but also check this indicator.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+  <xs:complexType name="AddedDocumentKeyType">
+    <xs:attribute name="DocumentSeq" type="core:Number4Type" use="required">
+      <xs:annotation>
+        <xs:documentation>Sequence number of the document within the verse.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="AddedDocumentType">
+    <xs:complexContent>
+      <xs:extension base="AddedDocumentKeyType">
+        <xs:sequence>
+          <xs:group ref="AddedDocumentFields"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="AddAddedDocumentType">
+    <xs:complexContent>
+      <xs:extension base="AddedDocumentType"/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:group name="AddedDocumentFields">
+    <xs:sequence>
+      <xs:element name="NameId" type="core:Number10Type">
+        <xs:annotation>
+          <xs:documentation>Identifier that links an occurrence to all types of text associated to this occurrence, e.g. name, posology, leaflet, ...and this in different languages.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="FormTypeId" type="core:Number3Type">
+        <xs:annotation>
+          <xs:documentation>Unique Form Demand identifier internal at NIHDI.
+            This identifier is managed at the NIHDI.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="AppendixTypeId" type="core:Number2Type">
+        <xs:annotation>
+          <xs:documentation>Identifier for the appendix type.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="MimeType" type="core:String10Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Electronic type of the document content.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="DocumentContent" type="xs:base64Binary" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Electronic version of the complementary document to be provided.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="AddressUrl" type="core:String255Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Field to store an URL address</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+  <xs:complexType name="QualificationListKeyType">
+    <xs:attribute name="QualificationList" type="core:String10Type" use="required">
+      <xs:annotation>
+        <xs:documentation>Listname of the list of professional qualification or codes as defined by the NIHDI</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="QualificationListType">
+    <xs:complexContent>
+      <xs:extension base="QualificationListKeyType">
+        <xs:sequence>
+          <xs:group ref="QualificationListFields"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="AddQualificationListType">
+    <xs:complexContent>
+      <xs:extension base="QualificationListType">
+        <xs:sequence>
+          <xs:element name="ProfessionalAuthorisation" type="AddProfessionalAuthorisationType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attributeGroup ref="core:actionPeriod"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="RemoveQualificationListType">
+    <xs:complexContent>
+      <xs:extension base="QualificationListKeyType">
+        <xs:attributeGroup ref="core:actionPeriod"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:group name="QualificationListFields">
+    <xs:sequence>
+      <xs:element name="NameId" type="core:Number10Type">
+        <xs:annotation>
+          <xs:documentation>Identifier that links an occurrence to all types of text associated to this occurrence, e.g. name, posology, leaflet, ...and this in different languages.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="ExclusiveInd" type="core:CharacterType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Indicates whether qualifications in the list should all apply simultaneously or just one.
+            1 = OR; 2 = AND</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+  <xs:complexType name="ProfessionalAuthorisationKeyType">
+    <xs:attribute name="ProfessionalAuthorisationId" type="core:Number10Type" use="required">
+      <xs:annotation>
+        <xs:documentation>Unique technical identifier to PROFESSIONAL_AUTHORISATION</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="ProfessionalAuthorisationType">
+    <xs:complexContent>
+      <xs:extension base="ProfessionalAuthorisationKeyType">
+        <xs:sequence>
+          <xs:group ref="ProfessionalAuthorisationFields"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="AddProfessionalAuthorisationType">
+    <xs:complexContent>
+      <xs:extension base="ProfessionalAuthorisationType"/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:group name="ProfessionalAuthorisationFields">
+    <xs:sequence>
+      <xs:element name="ProfessionalCV" type="core:String10Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Foreign key (FK) inherited from the entity PROFESSIONAL_CODE.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="PurchasingAdvisorName" type="core:String50Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Name of an authorised prescriber.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+  <xs:complexType name="ParagraphTraceKeyType">
+    <xs:attribute name="ParentChapterName" type="core:String10Type" use="required">
+      <xs:annotation>
+        <xs:documentation>The name of the chapter containing the parent paragraph. See the entity PARAGRAPH for more details.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="ParentParagraphName" type="core:String10Type" use="required">
+      <xs:annotation>
+        <xs:documentation>The name of the parent paragraph or subparagraph, which for the presumed chapters, is limited to an identification number. See the entity PARAGRAPH for more details.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="ParagraphTraceType">
+    <xs:complexContent>
+      <xs:extension base="ParagraphTraceKeyType">
+        <xs:sequence>
+          <xs:group ref="ParagraphTraceFields"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="AddParagraphTraceType">
+    <xs:complexContent>
+      <xs:extension base="ParagraphTraceType"/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:group name="ParagraphTraceFields">
+    <xs:sequence/>
+  </xs:group>
+  <xs:complexType name="NameExplanationKeyType">
+    <xs:attribute name="NameId" type="core:Number10Type" use="required">
+      <xs:annotation>
+        <xs:documentation>Identifier that is used by all entities as a link to find all types of text
+          (in different languages) associated to an occurrence of this entity.
+          The identifier can be linked to a name, posology, leaflet, ...in all possible languages.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="NameExplanationType">
+    <xs:complexContent>
+      <xs:extension base="NameExplanationKeyType">
+        <xs:sequence>
+          <xs:group ref="NameExplanationFields"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="AddNameExplanationType">
+    <xs:complexContent>
+      <xs:extension base="NameExplanationType">
+        <xs:sequence>
+          <xs:element name="NameTranslation" type="AddNameTranslationType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attributeGroup ref="core:actionPeriod"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="RemoveNameExplanationType">
+    <xs:complexContent>
+      <xs:extension base="NameExplanationKeyType">
+        <xs:attributeGroup ref="core:actionPeriod"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:group name="NameExplanationFields">
+    <xs:sequence>
+      <xs:element name="SourceTableId" type="core:Number3Type">
+        <xs:annotation>
+          <xs:documentation>Number of the entity source name. Ignored in SAM v2.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+  <xs:complexType name="NameTranslationKeyType">
+    <xs:attribute name="NameTypeCV" type="core:String6Type" use="required">
+      <xs:annotation>
+        <xs:documentation>Foreign key to NAME_TYPE</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="LanguageCV" type="core:String2Type" use="required">
+      <xs:annotation>
+        <xs:documentation>Language code value, ISO 639 (2-letter code)
+          e.g. NL  “Dutch”, FR  “French”, EN  “English”, DE  “German”,…</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="NameTranslationType">
+    <xs:complexContent>
+      <xs:extension base="NameTranslationKeyType">
+        <xs:sequence>
+          <xs:group ref="NameTranslationFields"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="AddNameTranslationType">
+    <xs:complexContent>
+      <xs:extension base="NameTranslationType"/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:group name="NameTranslationFields">
+    <xs:sequence>
+      <xs:element name="ShortText" type="core:String300Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Short text field for the names, alias names,  … In most cases either SHORT_TEXT or LONG_TEXT will be present.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="LongText" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Long text field for the posology, indications, leaflet text, …</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="LongBinaryText" type="xs:base64Binary" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Binary Long object for PDF document about the posology, indications, leaflet text, …</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="AddressUrl" type="core:String255Type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>field to store an URL address</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:group>
+  <xs:simpleType name="ModificationStatusType">
+    <xs:restriction base="core:CharacterType">
+      <xs:enumeration value="E"/>
+      <xs:enumeration value="C"/>
+      <xs:enumeration value="S"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DurationUnitType">
+    <xs:restriction base="core:CharacterType">
+      <xs:enumeration value="D"/>
+      <xs:enumeration value="W"/>
+      <xs:enumeration value="M"/>
+      <xs:enumeration value="Y"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="AgreementTypeType">
+    <xs:restriction base="core:CharacterType">
+      <xs:enumeration value="B"/>
+      <xs:enumeration value="C"/>
+      <xs:enumeration value="D"/>
+      <xs:enumeration value="E"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="VerseTypeType">
+    <xs:restriction base="core:String2Type">
+      <xs:enumeration value="E"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="RequestTypeType">
+    <xs:restriction base="core:CharacterType">
+      <xs:enumeration value="N"/>
+      <xs:enumeration value="P"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="SexRestrictedType">
+    <xs:restriction base="core:CharacterType">
+      <xs:enumeration value="F"/>
+      <xs:enumeration value="M"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ExclusionTypeType">
+    <xs:restriction base="core:CharacterType">
+      <xs:enumeration value="T"/>
+      <xs:enumeration value="C"/>
+      <xs:enumeration value="A"/>
+      <xs:enumeration value="D"/>
+      <xs:enumeration value="J"/>
+      <xs:enumeration value="I"/>
+      <xs:enumeration value="K"/>
+      <xs:enumeration value="E"/>
+      <xs:enumeration value="V"/>
+      <xs:enumeration value="S">
+        <xs:annotation>
+          <xs:documentation>Temporary included for backwards compatibility with SAM v1</xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
