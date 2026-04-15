@@ -1,6 +1,18 @@
 # samparse
 parsing the sam
 
+## Getting the SAM data
+
+Download the latest SAM database export (v6) from:
+**https://www.vas.ehealth.fgov.be/websamcivics/samcivics/**
+
+Select the latest v6 export and extract the XML files into:
+```
+trial/SAM/
+```
+
+This folder is gitignored and not included in the repository.
+
 
 # Generating classes from the xsd files included
 Run the xscgen-parse.ps1 script.
