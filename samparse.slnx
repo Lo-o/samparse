@@ -3,4 +3,5 @@
     <File Path="README.md" />
   </Folder>
   <Project Path="samparse/samparse.csproj" />
+  <Project Path="trial/trial.csproj" Id="86f4a9da-6f42-43ed-b9f6-302a973b23c3" />
 </Solution>
