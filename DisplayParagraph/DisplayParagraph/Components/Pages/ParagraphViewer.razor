@@ -3,6 +3,7 @@
 @using Be.Fgov.Ehealth.Samws.V2.Chapteriv.Submit
 @using Be.Fgov.Ehealth.Samws.V2.Export
 @using DisplayParagraph.Services
+@using Samparse
 @inject SamDataService SamData
 
 <PageTitle>Paragraph Viewer</PageTitle>
@@ -47,6 +48,12 @@
                 <button class="btn btn-primary w-100" @onclick="Load">Load</button>
             </div>
         </div>
+        <div class="row g-3 mt-1">
+            <div class="col-md-6">
+                <label class="form-label">Doctor qualifications (comma-separated Professional CV codes)</label>
+                <input @bind="doctorCvs" class="form-control" placeholder="e.g. 668, 650" />
+            </div>
+        </div>
     </div>
 </div>
 
@@ -55,8 +62,19 @@
     <div class="alert alert-danger">@errorMessage</div>
 }
 
-@if (rows is not null)
+@if (rows is not null && loadedParagraph is not null)
 {
+    var applicability = ApplicabilityChecker.CouldApplyTo(
+        loadedParagraph, BuildPatient(), BuildDoctor(), referenceDate, SamData.ChapterIvIndex);
+
+    <div class="alert @ApplicabilityAlertClass(applicability) d-flex align-items-center">
+        <span class="fs-4 me-2">@ApplicabilityIcon(applicability)</span>
+        <div>
+            <strong>Paragraph applicability: @applicability</strong>
+            <div class="small">@ApplicabilityExplanation(applicability)</div>
+        </div>
+    </div>
+
     @if (rows.Count == 0)
     {
         <p class="text-muted">No active verses for this paragraph on the selected date.</p>
@@ -72,36 +90,35 @@
                         <th>Text (NL)</th>
                         <th style="width:4rem" class="text-center" title="Sex restriction">Sex</th>
                         <th style="width:10rem" title="Age limits">Age limits</th>
+                        <th style="width:8rem" title="Doctor qualification list">Qual.</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var row in rows)
                     {
-                        var rowClass = (SexApplicable(row.Data) == false || AgeApplicable(row.Data) == false) ? "table-warning" : "";
+                        var verseCompat = ApplicabilityChecker.VerseCompatible(
+                            row.Data, BuildPatient(), BuildDoctor(), referenceDate, SamData.ChapterIvIndex);
+                        var rowClass = verseCompat == ApplicabilityResult.NotApplicable ? "table-warning" : "";
 
                         <tr class="@rowClass">
                             <td class="text-muted">@row.VerseSeq</td>
                             <td class="font-monospace">@row.Data.VerseNum</td>
                             <td style="padding-left: @(row.Data.VerseLevel * 24)px">
+                                @if (row.Data.CheckBoxInd)
+                                {
+                                    <span class="text-muted me-1" title="Checkbox alternative">☐</span>
+                                }
                                 @row.Data.TextNl
                             </td>
                             <td class="text-center">@SexLabel(row.Data)</td>
-                            <td>@AgeLimitsLabel(row.Data) @AgeApplicabilityIcon(row.Data)</td>
+                            <td>@AgeLimitsLabel(row.Data)</td>
+                            <td class="font-monospace small">@row.Data.PurchasingAdvisorQualList</td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
-        <p class="text-muted small">@rows.Count verse(s) active on @referenceDate.ToShortDateString()
-            @if (!string.IsNullOrEmpty(patientSex))
-            {
-                <span> &mdash; sex applicable: @rows.Count(r => SexApplicable(r.Data) != false)/@rows.Count</span>
-            }
-            @if (patientAgeValue.HasValue)
-            {
-                <span> &mdash; age applicable: @rows.Count(r => AgeApplicable(r.Data) != false)/@rows.Count</span>
-            }
-        </p>
+        <p class="text-muted small">@rows.Count verse(s) active on @referenceDate.ToShortDateString()</p>
     }
 }
 
@@ -111,8 +128,10 @@
     private string patientSex = "";
     private decimal? patientAgeValue;
     private string patientAgeUnit = "Y";
+    private string doctorCvs = "";
 
     private List<VerseRow>? rows;
+    private ParagraphFullDataType? loadedParagraph;
     private string? errorMessage;
 
     private record VerseRow(int VerseSeq, VerseDataType Data);
@@ -133,9 +152,11 @@
         {
             errorMessage = $"Paragraph '{paragraphName.Trim()}' not found.";
             rows = null;
+            loadedParagraph = null;
             return Task.CompletedTask;
         }
 
+        loadedParagraph = paragraph;
         rows = paragraph.Verse
             .OrderBy(v => v.VerseSeq)
             .Select(v => v.Data.FirstOrDefault(d => d.From <= referenceDate && (!d.ToSpecified || d.To >= referenceDate)) is { } data
@@ -148,14 +169,43 @@
         return Task.CompletedTask;
     }
 
-    private static double ToDays(decimal value, DurationUnitType unit) => unit switch
+    private PatientContext BuildPatient() => new(
+        Sex: patientSex switch { "F" => SexRestrictedType.F, "M" => SexRestrictedType.M, _ => null },
+        Age: patientAgeValue,
+        AgeUnit: Enum.Parse<DurationUnitType>(patientAgeUnit));
+
+    private DoctorContext BuildDoctor()
     {
-        DurationUnitType.D => (double)value,
-        DurationUnitType.W => (double)value * 7,
-        DurationUnitType.M => (double)value * 30.4375,
-        DurationUnitType.Y => (double)value * 365.25,
-        _ => (double)value,
+        var codes = (doctorCvs ?? "")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+        return codes.Count == 0 ? DoctorContext.Unknown : new DoctorContext(codes);
+    }
+
+    private static string ApplicabilityAlertClass(ApplicabilityResult r) => r switch
+    {
+        ApplicabilityResult.Applicable    => "alert-success",
+        ApplicabilityResult.NotApplicable => "alert-danger",
+        _                                 => "alert-warning",
     };
+
+    private static string ApplicabilityIcon(ApplicabilityResult r) => r switch
+    {
+        ApplicabilityResult.Applicable    => "✓",
+        ApplicabilityResult.NotApplicable => "✗",
+        _                                 => "?",
+    };
+
+    private static string ApplicabilityExplanation(ApplicabilityResult r) => r switch
+    {
+        ApplicabilityResult.Applicable    => "No mandatory restriction in this paragraph is violated by the current patient/doctor context.",
+        ApplicabilityResult.NotApplicable => "A mandatory choice group in this paragraph cannot be satisfied by the current patient/doctor context.",
+        _                                 => "Some relevant patient or doctor information is missing, so applicability cannot be decided.",
+    };
+
+    private static string SexLabel(VerseDataType data) =>
+        !data.SexRestrictedSpecified ? "" :
+        data.SexRestricted == SexRestrictedType.F ? "♀" : "♂";
 
     private static string UnitLabel(DurationUnitType unit) => unit switch
     {
@@ -166,24 +216,6 @@
         _ => "?",
     };
 
-    private bool? SexApplicable(VerseDataType data) =>
-        !data.SexRestrictedSpecified ? true :
-        string.IsNullOrEmpty(patientSex) ? null :
-        (data.SexRestricted == SexRestrictedType.F) == (patientSex == "F");
-
-    private bool? AgeApplicable(VerseDataType data)
-    {
-        if (!data.MinimumAgeAuthorizedSpecified && !data.MaximumAgeAuthorizedSpecified) return true;
-        if (!patientAgeValue.HasValue) return null;
-        var patientDays = ToDays(patientAgeValue.Value, Enum.Parse<DurationUnitType>(patientAgeUnit));
-        return (!data.MinimumAgeAuthorizedSpecified || patientDays >= ToDays(data.MinimumAgeAuthorized, data.MinimumAgeAuthorizedUnit))
-            && (!data.MaximumAgeAuthorizedSpecified || patientDays <= ToDays(data.MaximumAgeAuthorized, data.MaximumAgeAuthorizedUnit));
-    }
-
-    private static string SexLabel(VerseDataType data) =>
-        !data.SexRestrictedSpecified ? "" :
-        data.SexRestricted == SexRestrictedType.F ? "♀" : "♂";
-
     private static string AgeLimitsLabel(VerseDataType data) => (data.MinimumAgeAuthorizedSpecified, data.MaximumAgeAuthorizedSpecified) switch
     {
         (false, false) => "",
@@ -191,7 +223,4 @@
         (true,  false) => $"≥ {data.MinimumAgeAuthorized} {UnitLabel(data.MinimumAgeAuthorizedUnit)}",
         (false, true)  => $"≤ {data.MaximumAgeAuthorized} {UnitLabel(data.MaximumAgeAuthorizedUnit)}",
     };
-
-    private string AgeApplicabilityIcon(VerseDataType data) =>
-        AgeApplicable(data) switch { true => "✓", false => "✗", _ => "" };
 }

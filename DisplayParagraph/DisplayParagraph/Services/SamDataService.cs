@@ -6,6 +6,7 @@ public class SamDataService
 {
     private readonly string _dataPath;
     private SamDatabase? _database;
+    private ChapterIvIndex? _chapterIvIndex;
 
     public SamDataService(IConfiguration config, IWebHostEnvironment env)
     {
@@ -14,4 +15,6 @@ public class SamDataService
     }
 
     public SamDatabase Database => _database ??= SamLoader.Load(_dataPath);
+
+    public ChapterIvIndex ChapterIvIndex => _chapterIvIndex ??= new ChapterIvIndex(Database.ChapterIv!);
 }
