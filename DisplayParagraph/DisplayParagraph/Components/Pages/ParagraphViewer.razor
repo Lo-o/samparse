@@ -1,0 +1,240 @@
+@page "/paragraph-viewer"
+@rendermode InteractiveServer
+@using Be.Fgov.Ehealth.Samws.V2.Chapteriv.Submit
+@using Be.Fgov.Ehealth.Samws.V2.Export
+@using DisplayParagraph.Services
+@inject SamDataService SamData
+
+<PageTitle>Paragraph Viewer</PageTitle>
+
+<h2 class="mb-4">Chapter IV Paragraph Viewer</h2>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Paragraph</label>
+                <input @bind="paragraphName" @bind:event="oninput"
+                       @onkeydown="OnKeyDown"
+                       class="form-control" placeholder="e.g. 12850000" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Reference date</label>
+                <input type="date" @bind="referenceDate" class="form-control" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Patient sex</label>
+                <select @bind="patientSex" class="form-select">
+                    <option value="">—</option>
+                    <option value="M">Male (M)</option>
+                    <option value="F">Female (F)</option>
+                </select>
+            </div>
+            <div class="col-sm-6 col-md-2">
+                <label class="form-label">Patient age</label>
+                <input type="number" min="0" @bind="patientAgeValue" class="form-control" placeholder="—" />
+            </div>
+            <div class="col-sm-6 col-md-1">
+                <label class="form-label">Unit</label>
+                <select @bind="patientAgeUnit" class="form-select">
+                    <option value="Y">Y</option>
+                    <option value="M">M</option>
+                    <option value="W">W</option>
+                    <option value="D">D</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button class="btn btn-primary w-100" @onclick="Load">Load</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (errorMessage is not null)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (rows is not null)
+{
+    @if (rows.Count == 0)
+    {
+        <p class="text-muted">No active verses for this paragraph on the selected date.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:3rem" title="Sequence within paragraph">Seq</th>
+                        <th style="width:5rem" title="Unique verse number">Verse #</th>
+                        <th>Text (NL)</th>
+                        <th style="width:4rem" class="text-center" title="Sex restriction">Sex</th>
+                        <th style="width:10rem" title="Age limits">Age limits</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in rows)
+                    {
+                        var sexOk = SexApplicable(row.Data);
+                        var ageOk = AgeApplicable(row.Data);
+                        var rowClass = (sexOk == false || ageOk == false) ? "table-warning" : "";
+
+                        <tr class="@rowClass">
+                            <td class="text-muted">@row.VerseSeq</td>
+                            <td class="font-monospace">@row.Data.VerseNum</td>
+                            <td style="padding-left: @(row.Data.VerseLevel * 24)px">
+                                @row.Data.TextNl
+                            </td>
+                            <td class="text-center">@SexLabel(row.Data)</td>
+                            <td>@AgeLimitsLabel(row.Data) @AgeApplicabilityIcon(row.Data)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="text-muted small">@rows.Count verse(s) active on @referenceDate.ToShortDateString()
+            @if (sexOkCount.HasValue || ageOkCount.HasValue)
+            {
+                <span> &mdash; </span>
+                @if (sexOkCount.HasValue){ <span>sex applicable: @sexOkCount/@rows.Count</span> }
+                @if (sexOkCount.HasValue && ageOkCount.HasValue){ <span>, </span> }
+                @if (ageOkCount.HasValue){ <span>age applicable: @ageOkCount/@rows.Count</span> }
+            }
+        </p>
+    }
+}
+
+@code {
+    private string paragraphName = "";
+    private DateTime referenceDate = DateTime.Today;
+    private string patientSex = "";
+    private decimal? patientAgeValue;
+    private string patientAgeUnit = "Y";
+
+    private List<VerseRow>? rows;
+    private string? errorMessage;
+    private int? sexOkCount;
+    private int? ageOkCount;
+
+    private record VerseRow(int VerseSeq, VerseDataType Data);
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await Load();
+    }
+
+    private Task Load()
+    {
+        errorMessage = null;
+        rows = null;
+        sexOkCount = null;
+        ageOkCount = null;
+
+        if (string.IsNullOrWhiteSpace(paragraphName))
+        {
+            errorMessage = "Enter a paragraph name.";
+            return Task.CompletedTask;
+        }
+
+        var db = SamData.Database;
+        if (db.ChapterIv is null)
+        {
+            errorMessage = "Chapter IV data not loaded (no CHAPTERIV-*.xml found in the configured SAM data path).";
+            return Task.CompletedTask;
+        }
+
+        var paragraph = db.ChapterIv.Paragraph.FirstOrDefault(p => p.ParagraphName == paragraphName.Trim());
+        if (paragraph is null)
+        {
+            errorMessage = $"Paragraph '{paragraphName.Trim()}' not found.";
+            return Task.CompletedTask;
+        }
+
+        rows = paragraph.Verse
+            .OrderBy(v => v.VerseSeq)
+            .Select(v =>
+            {
+                var active = v.Data.FirstOrDefault(d =>
+                    d.From <= referenceDate && (!d.ToSpecified || d.To >= referenceDate));
+                return active is null ? null : new VerseRow(v.VerseSeq, active);
+            })
+            .Where(r => r is not null)
+            .Select(r => r!)
+            .ToList();
+
+        if (!string.IsNullOrEmpty(patientSex))
+            sexOkCount = rows.Count(r => SexApplicable(r.Data) != false);
+
+        if (patientAgeValue.HasValue)
+            ageOkCount = rows.Count(r => AgeApplicable(r.Data) != false);
+
+        return Task.CompletedTask;
+    }
+
+    private static double ToDays(decimal value, DurationUnitType unit) => unit switch
+    {
+        DurationUnitType.D => (double)value,
+        DurationUnitType.W => (double)value * 7,
+        DurationUnitType.M => (double)value * 30.4375,
+        DurationUnitType.Y => (double)value * 365.25,
+        _ => (double)value,
+    };
+
+    private static string UnitLabel(DurationUnitType unit) => unit switch
+    {
+        DurationUnitType.D => "d",
+        DurationUnitType.W => "wk",
+        DurationUnitType.M => "mo",
+        DurationUnitType.Y => "yr",
+        _ => "?",
+    };
+
+    private bool? SexApplicable(VerseDataType data)
+    {
+        if (!data.SexRestrictedSpecified) return true;
+        if (string.IsNullOrEmpty(patientSex)) return null;
+        return (data.SexRestricted == SexRestrictedType.F) == (patientSex == "F");
+    }
+
+    private bool? AgeApplicable(VerseDataType data)
+    {
+        if (!data.MinimumAgeAuthorizedSpecified && !data.MaximumAgeAuthorizedSpecified) return true;
+        if (!patientAgeValue.HasValue) return null;
+        double patientDays = ToDays(patientAgeValue.Value, Enum.Parse<DurationUnitType>(patientAgeUnit));
+        if (data.MinimumAgeAuthorizedSpecified && patientDays < ToDays(data.MinimumAgeAuthorized, data.MinimumAgeAuthorizedUnit))
+            return false;
+        if (data.MaximumAgeAuthorizedSpecified && patientDays > ToDays(data.MaximumAgeAuthorized, data.MaximumAgeAuthorizedUnit))
+            return false;
+        return true;
+    }
+
+    private static string SexLabel(VerseDataType data)
+    {
+        if (!data.SexRestrictedSpecified) return "";
+        return data.SexRestricted == SexRestrictedType.F ? "♀" : "♂";
+    }
+
+    private static string AgeLimitsLabel(VerseDataType data)
+    {
+        if (!data.MinimumAgeAuthorizedSpecified && !data.MaximumAgeAuthorizedSpecified)
+            return "";
+        if (data.MinimumAgeAuthorizedSpecified && data.MaximumAgeAuthorizedSpecified)
+            return $"{data.MinimumAgeAuthorized} {UnitLabel(data.MinimumAgeAuthorizedUnit)} – {data.MaximumAgeAuthorized} {UnitLabel(data.MaximumAgeAuthorizedUnit)}";
+        if (data.MinimumAgeAuthorizedSpecified)
+            return $"≥ {data.MinimumAgeAuthorized} {UnitLabel(data.MinimumAgeAuthorizedUnit)}";
+        return $"≤ {data.MaximumAgeAuthorized} {UnitLabel(data.MaximumAgeAuthorizedUnit)}";
+    }
+
+    private string AgeApplicabilityIcon(VerseDataType data)
+    {
+        if (!data.MinimumAgeAuthorizedSpecified && !data.MaximumAgeAuthorizedSpecified) return "";
+        return AgeApplicable(data) switch
+        {
+            true  => "✓",
+            false => "✗",
+            null  => "",
+        };
+    }
+}

@@ -13,6 +13,7 @@ The project uses XSD schemas (v6.0.2) from the SAM web service (`urn:be:fgov:ehe
 - `samparse/` — Class library containing the XSD schemas and generated C# serialization classes
 - `trial/` — Console app that references `samparse` and experiments with deserializing SAM XML files
 - `trial/SAM/` — Sample SAM XML export files (CPN, REF, VMP, AMP, RML, CMP, IMPP, RMB, NONMEDICINAL, CHAPTERIV)
+- `DisplayParagraph/` — Blazor Web App (Interactive Server + WASM) for visualising Chapter IV paragraph verses
 
 ## Build and run
 
@@ -22,6 +23,9 @@ dotnet build samparse.slnx
 
 # Run the trial console app
 dotnet run --project trial/trial.csproj
+
+# Run the Blazor app
+dotnet run --project DisplayParagraph/DisplayParagraph/DisplayParagraph.csproj
 ```
 
 ## Regenerating the generated classes
@@ -49,6 +53,42 @@ Also resolve any namespace conflict where the same XML element name maps to two 
 | `Be.Fgov.Ehealth.Samws.V2.Virtual.*` | VMP (Virtual Medicinal Products) |
 | `Be.Fgov.Ehealth.Samws.V2.Refdata` | Reference data |
 | `Be.Fgov.Ehealth.Samws.V2.Company.Submit` | Company data |
+
+## DisplayParagraph Blazor app
+
+The `DisplayParagraph/` folder contains a Blazor Web App (Interactive Server render mode) with a single feature page: **Paragraph Viewer** (`/paragraph-viewer`).
+
+### Architecture
+
+- `DisplayParagraph/DisplayParagraph/` — server project; references `samparse`
+- `DisplayParagraph/DisplayParagraph.Client/` — WASM client (currently only the Counter demo page)
+- `DisplayParagraph/DisplayParagraph/Services/SamDataService.cs` — singleton that lazy-loads `SamDatabase` via `SamLoader.Load` on first access
+
+### SAM data path
+
+The server reads the SAM XML files from a path configured in `appsettings.json`:
+
+```json
+"SamDataPath": "../../trial/SAM"
+```
+
+The path is resolved relative to the server project's content root (i.e. `DisplayParagraph/DisplayParagraph/`), so the default points at the shared `trial/SAM/` folder. Override in `appsettings.Development.json` if your files live elsewhere.
+
+### Paragraph Viewer page
+
+Inputs: paragraph name, reference date (defaults to today), patient sex, patient age + unit.
+
+On load it finds all `VerseFullDataType` entries for the paragraph, selects the one `VerseDataType` per verse that is active on the reference date (`From ≤ date` and either `ToSpecified` is false or `To ≥ date`), then displays them in a table:
+
+| Column | Source |
+|---|---|
+| Seq | `VerseFullDataType.VerseSeq` |
+| Verse # | `VerseDataType.VerseNum` |
+| Text (NL) | `VerseDataType.TextNl`, indented by `VerseLevel × 24 px` |
+| Sex | `VerseDataType.SexRestricted` (♀ / ♂) when `SexRestrictedSpecified` |
+| Age limits | Formatted from `MinimumAgeAuthorized` / `MaximumAgeAuthorized` + unit; shows ✓/✗ when patient age is supplied |
+
+Rows where the patient's sex or age falls outside the verse restriction are highlighted in yellow.
 
 ## Deserializing SAM XML
 

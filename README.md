@@ -1,6 +1,12 @@
 # samparse
 parsing the sam
 
+## Projects
+
+- **`samparse/`** — class library with XSD-generated C# types and `SamLoader`
+- **`trial/`** — console app for ad-hoc data exploration
+- **`DisplayParagraph/`** — Blazor Web App; navigate to `/paragraph-viewer` to browse Chapter IV paragraph verses interactively
+
 ## Getting the SAM data
 
 Download the latest SAM database export (v6) from:
@@ -13,6 +19,7 @@ trial/SAM/
 
 This folder is gitignored and not included in the repository.
 
+The `DisplayParagraph` Blazor app reads from the same folder by default (`SamDataPath` in `appsettings.json` resolves to `trial/SAM/` relative to the solution root).
 
 # Generating classes from the xsd files included
 Run the xscgen-parse.ps1 script.
