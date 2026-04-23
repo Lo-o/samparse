@@ -31,47 +31,4 @@ foreach (var paragraphName in new[] { "12850000", "13780000" })
     }
 }
 
-var osteoporosis12850000 = db.ChapterIv.Paragraph
-    .First(p => p.ParagraphName == "12850000");
-
-var osteoporosisVerses = osteoporosis12850000.Verse
-    .OrderBy(verse => verse.VerseSeq)
-    .SelectMany(vers => vers.Data)
-    .Where(data => data.From < DateTimeOffset.UtcNow && (data.To > DateTimeOffset.Now || data.To == DateTime.MinValue));
-
-
-
-var allParagraphs = db.ChapterIv.Paragraph;
-
-
-var onduidelijkWatQualificationListPreciesIs = db.ChapterIv.QualificationList;
-
-
-
-var paragraphDate = DateTimeOffset.Now;
-
-
-// Qualification-variance analysis — see Samparse.ChapterIvAnalysis for method + findings.
-Console.WriteLine("\n=== Terminal-verse qualification variance ===");
-var terminals = ChapterIvAnalysis.QualificationsPerParagraph(db.ChapterIv!, DateTime.Today, terminalOnly: true);
-var varying = terminals.Where(t => t.DistinctQuals.Count > 1).ToList();
-
-Console.WriteLine($"Paragraphs with ≥1 terminal verse: {terminals.Count(t => t.VerseCount > 0)}");
-Console.WriteLine($"  of which have >1 distinct qual across terminals: {varying.Count}");
-Console.WriteLine($"  mixing '<none>' with a specific qual: {varying.Count(t => t.DistinctQuals.Contains(ChapterIvAnalysis.NoneBucket))}");
-Console.WriteLine($"  with 2+ different specific quals: {varying.Count(t => t.DistinctQuals.Count(q => q != ChapterIvAnalysis.NoneBucket) >= 2)}");
-
-Console.WriteLine("\nFirst 10 varying paragraphs:");
-foreach (var t in varying.Take(10))
-    Console.WriteLine($"  {t.ParagraphName}: [{string.Join(", ", t.DistinctQuals)}]  ({t.VerseCount} terminal verses)");
-
 Console.ReadLine();
-
-
-
-public record PatientDataRelevantForParagraph
-{
-    public string Sex { get; init; }
-    public DateTimeOffset DateOfBirth { get; init; }
-}
-

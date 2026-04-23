@@ -112,7 +112,15 @@
                             </td>
                             <td class="text-center">@SexLabel(row.Data)</td>
                             <td>@AgeLimitsLabel(row.Data)</td>
-                            <td class="font-monospace small">@row.Data.PurchasingAdvisorQualList</td>
+                            <td class="font-monospace small">
+                                @if (!string.IsNullOrEmpty(row.Data.PurchasingAdvisorQualList))
+                                {
+                                    <span title="@QualTooltip(row.Data.PurchasingAdvisorQualList)"
+                                          style="border-bottom: 1px dotted #888; cursor: help;">
+                                        @row.Data.PurchasingAdvisorQualList
+                                    </span>
+                                }
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -202,6 +210,15 @@
         ApplicabilityResult.NotApplicable => "A mandatory choice group in this paragraph cannot be satisfied by the current patient/doctor context.",
         _                                 => "Some relevant patient or doctor information is missing, so applicability cannot be decided.",
     };
+
+    private string QualTooltip(string listKey)
+    {
+        var info = SamData.QualResolver.Resolve(listKey, referenceDate);
+        if (info is null) return $"Qualification list {listKey} (not found in reference data)";
+        if (info.Members.Count == 0) return $"Qualification list {listKey} (no active CV codes on {referenceDate:yyyy-MM-dd})";
+        var lines = info.Members.Select(m => $"  • {m.ProfessionalCv}  {m.NlName ?? "(no name)"}");
+        return $"Qualification list {listKey} — {info.Members.Count} CV code(s):\n" + string.Join("\n", lines);
+    }
 
     private static string SexLabel(VerseDataType data) =>
         !data.SexRestrictedSpecified ? "" :

@@ -10,9 +10,10 @@ The project uses XSD schemas (v6.0.2) from the SAM web service (`urn:be:fgov:ehe
 
 ## Solution structure
 
-- `samparse/` — Class library containing the XSD schemas, generated C# serialization classes, `SamLoader`, and `ApplicabilityChecker`
-- `trial/` — Console app that references `samparse` and experiments with deserializing SAM XML files
+- `samparse/` — Class library containing the XSD schemas, generated C# serialization classes, `SamLoader`, `ApplicabilityChecker`, `QualificationListResolver`, and `ChapterIvAnalysis`
+- `trial/` — Console app that references `samparse` — kept as a scratchpad for small experiments
 - `trial/SAM/` — Sample SAM XML export files (CPN, REF, VMP, AMP, RML, CMP, IMPP, RMB, NONMEDICINAL, CHAPTERIV)
+- `analysis/` — Console app for ad-hoc investigations over the dataset (qualification variance, name resolution, etc.)
 - `DisplayParagraph/` — Blazor Web App (Interactive Server + WASM) for visualising Chapter IV paragraph verses
 - `docs/` — Additional domain/design notes (see `docs/chapter-iv-applicability.md` for how paragraph applicability is derived)
 

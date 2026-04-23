@@ -4,6 +4,7 @@
   </Folder>
   <Project Path="DisplayParagraph/DisplayParagraph.Client/DisplayParagraph.Client.csproj" Id="21526209-193f-42d2-b0b6-ddfc1a805a9e" />
   <Project Path="DisplayParagraph/DisplayParagraph/DisplayParagraph.csproj" Id="1342a487-453c-4132-aa0f-d979d008b7e8" />
+  <Project Path="analysis/analysis.csproj" />
   <Project Path="samparse/samparse.csproj" />
   <Project Path="trial/trial.csproj" Id="86f4a9da-6f42-43ed-b9f6-302a973b23c3" />
 </Solution>
