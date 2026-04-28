@@ -11,6 +11,7 @@ live on the VPS in `/var/lib/samparse/`, **not** in the deploy artifact —
 they update on a different cadence than the code.
 
 All the deploy artifacts referenced below live in `deploy/`:
+- `setup-vps.sh` — first-time hardening + base-package install (run once as root)
 - `displayparagraph.service` — systemd unit
 - `Caddyfile` — reverse-proxy config
 - `deploy.sh` — local push-to-VPS script
@@ -19,53 +20,34 @@ All the deploy artifacts referenced below live in `deploy/`:
 
 ## One-time server setup
 
-Run the following on the VPS as root (or with `sudo`).
+### 1–4. Run `setup-vps.sh`
 
-### 1. Base packages
-
-```bash
-apt update && apt upgrade -y
-apt install -y rsync curl ufw
-```
-
-Open the firewall:
-```bash
-ufw allow OpenSSH
-ufw allow 80/tcp
-ufw allow 443/tcp
-ufw enable
-```
-
-### 2. Install the ASP.NET Core 10 runtime
-
-Microsoft's apt repo:
-```bash
-curl -sSL https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -o /tmp/packages-microsoft-prod.deb
-dpkg -i /tmp/packages-microsoft-prod.deb
-apt update
-apt install -y aspnetcore-runtime-10.0
-```
-
-Verify: `dotnet --list-runtimes` should show `Microsoft.AspNetCore.App 10.0.*`.
-
-### 3. Install Caddy
+Add your SSH public key to root in the Hetzner Console (Server → SSH Keys),
+then from your local machine:
 
 ```bash
-apt install -y debian-keyring debian-archive-keyring apt-transport-https
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' > /etc/apt/sources.list.d/caddy-stable.list
-apt update
-apt install -y caddy
+scp deploy/setup-vps.sh root@<vps>:/tmp/
+ssh root@<vps> "bash /tmp/setup-vps.sh"
 ```
 
-### 4. Create the app user and directories
+That script handles, idempotently:
 
-```bash
-useradd --system --no-create-home --shell /usr/sbin/nologin displayparagraph
-mkdir -p /opt/displayparagraph /var/lib/samparse /var/log/caddy
-chown displayparagraph:displayparagraph /opt/displayparagraph
-chown displayparagraph:displayparagraph /var/lib/samparse
-```
+- `apt update && upgrade`
+- Base packages (`rsync`, `curl`, `ufw`, `fail2ban`, `unattended-upgrades`, …)
+- UFW firewall — default deny inbound, allow 22 / 80 / 443
+- Fail2ban for SSH brute-force protection
+- Unattended security upgrades
+- Creating the **`deploy`** user with passwordless sudo and your SSH key
+  (copied from root)
+- Disabling root SSH and password auth (`/etc/ssh/sshd_config.d/99-hardening.conf`)
+- Installing the **ASP.NET Core 10** runtime via Microsoft's apt repo
+- Installing **Caddy**
+- Creating the **`displayparagraph`** app user and the directories
+  `/opt/displayparagraph`, `/var/lib/samparse`, `/var/log/caddy`
+
+When it finishes, **log out, log back in as `deploy`** to verify SSH works
+before continuing — if it doesn't, you can still recover via the Hetzner web
+console (Server → Console).
 
 ### 5. Upload the SAM XML files
 
