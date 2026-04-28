@@ -1,24 +1,28 @@
+using System.Diagnostics;
 using Samparse;
 
 namespace DisplayParagraph.Services;
 
 public class SamDataService
 {
-    private readonly string _dataPath;
-    private SamDatabase? _database;
-    private ChapterIvIndex? _chapterIvIndex;
-    private QualificationListResolver? _qualResolver;
+    public SamDatabase Database { get; }
+    public ChapterIvIndex ChapterIvIndex { get; }
+    public QualificationListResolver QualResolver { get; }
 
-    public SamDataService(IConfiguration config, IWebHostEnvironment env)
+    public SamDataService(IConfiguration config, IWebHostEnvironment env, ILogger<SamDataService> logger)
     {
         var relPath = config["SamDataPath"] ?? "../../trial/SAM";
-        _dataPath = Path.GetFullPath(Path.Combine(env.ContentRootPath, relPath));
+        var dataPath = Path.GetFullPath(Path.Combine(env.ContentRootPath, relPath));
+
+        const SamExport needed = SamExport.ChapterIv | SamExport.References;
+
+        logger.LogInformation("Loading SAM exports {Exports} from {Path}…", needed, dataPath);
+        var sw = Stopwatch.StartNew();
+
+        Database = SamLoader.Load(dataPath, needed);
+        ChapterIvIndex = new ChapterIvIndex(Database.ChapterIv!);
+        QualResolver = new QualificationListResolver(Database.ChapterIv!, Database.References!);
+
+        logger.LogInformation("SAM data loaded in {Elapsed:N1}s", sw.Elapsed.TotalSeconds);
     }
-
-    public SamDatabase Database => _database ??= SamLoader.Load(_dataPath);
-
-    public ChapterIvIndex ChapterIvIndex => _chapterIvIndex ??= new ChapterIvIndex(Database.ChapterIv!);
-
-    public QualificationListResolver QualResolver =>
-        _qualResolver ??= new QualificationListResolver(Database.ChapterIv!, Database.References!);
 }

@@ -6,7 +6,7 @@
 using Samparse;
 
 var samDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../trial/SAM"));
-var db = SamLoader.Load(samDir);
+var db = SamLoader.Load(samDir, SamExport.ChapterIv | SamExport.References);
 var today = DateTime.Today;
 
 // ---------------------------------------------------------------------------

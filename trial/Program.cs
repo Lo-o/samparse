@@ -2,7 +2,7 @@ using Be.Fgov.Ehealth.Samws.V2.Chapteriv.Submit;
 using Samparse;
 
 var samDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../SAM"));
-var db = SamLoader.Load(samDir);
+var db = SamLoader.Load(samDir, SamExport.ChapterIv);
 
 Console.WriteLine("Done. Press Enter to exit.");
 

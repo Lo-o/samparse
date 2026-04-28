@@ -64,7 +64,7 @@ The `DisplayParagraph/` folder contains a Blazor Web App (Interactive Server ren
 
 - `DisplayParagraph/DisplayParagraph/` — server project; references `samparse`
 - `DisplayParagraph/DisplayParagraph.Client/` — WASM client (currently only the Counter demo page)
-- `DisplayParagraph/DisplayParagraph/Services/SamDataService.cs` — singleton that lazy-loads `SamDatabase` via `SamLoader.Load` on first access
+- `DisplayParagraph/DisplayParagraph/Services/SamDataService.cs` — singleton that eagerly loads `SamDatabase` (CHAPTERIV + REF only) at app startup via `Program.cs` calling `GetRequiredService<SamDataService>()` before `app.Run()`. Other exports are skipped via the `SamExport` flags enum on `SamLoader.Load` to avoid the ~2.4 GB full-dataset cost.
 
 ### SAM data path
 

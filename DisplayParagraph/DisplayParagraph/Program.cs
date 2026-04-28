@@ -12,6 +12,10 @@ builder.Services.AddRazorComponents()
 
 var app = builder.Build();
 
+// Eagerly load SAM data at startup so the first request isn't slow and missing/corrupt
+// files cause a fail-fast crash rather than a deferred 500.
+app.Services.GetRequiredService<SamDataService>();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
