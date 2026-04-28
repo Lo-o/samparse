@@ -8,162 +8,132 @@
 
 <h2 class="mb-4">Qualification Codes &amp; Lists</h2>
 
-@if (loading)
-{
-    <p class="text-muted"><em>Loading SAM data…</em></p>
-}
-else
-{
-    <section class="mb-5">
-        <h4>Professional CV Codes</h4>
-        <p>
-            In Chapter IV of the Belgian reimbursement rules, certain reimbursement paths are restricted
-            to specific categories of healthcare professional. Each category is identified by a
-            <strong>Professional CV code</strong> — a short numeric string (e.g. <code>668</code>) assigned
-            by RIZIV/INAMI. These codes come from the SAM <em>REF</em> export and are the atomic unit of
-            qualification data: every qualification requirement in a verse ultimately resolves to one or more
-            of these codes.
-        </p>
-        <p>
-            The official RIZIV registry — <strong>Silver Pages</strong> — lets prescribers look up their
-            own professional authorisation code:
-            <a href="https://webappsa.riziv-inami.fgov.be/silverpages/" target="_blank" rel="noopener noreferrer">
-                webappsa.riziv-inami.fgov.be/silverpages/
-            </a>
-        </p>
+<section class="mb-5">
+    <h4>Professional CV Codes</h4>
+    <p>
+        In Chapter IV of the Belgian reimbursement rules, certain reimbursement paths are restricted
+        to specific categories of healthcare professional. Each category is identified by a
+        <strong>Professional CV code</strong> — a short numeric string (e.g. <code>668</code>) assigned
+        by RIZIV/INAMI. These codes come from the SAM <em>REF</em> export and are the atomic unit of
+        qualification data: every qualification requirement in a verse ultimately resolves to one or more
+        of these codes.
+    </p>
+    <p>
+        The official RIZIV registry — <strong>Silver Pages</strong> — lets prescribers look up their
+        own professional authorisation code:
+        <a href="https://webappsa.riziv-inami.fgov.be/silverpages/" target="_blank" rel="noopener noreferrer">
+            webappsa.riziv-inami.fgov.be/silverpages/
+        </a>
+    </p>
 
-        @{
-            var filteredCv = FilteredCvCodes();
-        }
+    @{
+        var filteredCv = FilteredCvCodes();
+    }
 
-        <div class="mb-2 d-flex align-items-center gap-2">
-            <input type="search" class="form-control form-control-sm"
-                   style="max-width: 320px"
-                   placeholder="Filter by code or name…"
-                   @bind="cvSearch" @bind:event="oninput" />
-            <span class="text-muted small">@filteredCv.Count of @allCvCodes!.Count</span>
-        </div>
+    <div class="mb-2 d-flex align-items-center gap-2">
+        <input type="search" class="form-control form-control-sm"
+               style="max-width: 320px"
+               placeholder="Filter by code or name…"
+               @bind="cvSearch" @bind:event="oninput" />
+        <span class="text-muted small">@filteredCv.Count of @SamData.AllCvCodes.Count</span>
+    </div>
 
-        <div style="max-height: 380px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px;">
-            <table class="table table-sm table-hover mb-0 align-middle">
-                <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+    <div style="max-height: 380px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px;">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+                <tr>
+                    <th style="width: 6rem">Code</th>
+                    <th>NL name</th>
+                    <th>FR name</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var cv in filteredCv)
+                {
                     <tr>
-                        <th style="width: 6rem">Code</th>
-                        <th>NL name</th>
-                        <th>FR name</th>
+                        <td class="font-monospace">@cv.ProfessionalCv</td>
+                        <td>@(cv.NlName ?? "—")</td>
+                        <td>@(cv.FrName ?? "—")</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var cv in filteredCv)
-                    {
-                        <tr>
-                            <td class="font-monospace">@cv.ProfessionalCv</td>
-                            <td>@(cv.NlName ?? "—")</td>
-                            <td>@(cv.FrName ?? "—")</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </section>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
 
-    <section class="mb-5">
-        <h4>Qualification Lists</h4>
-        <p>
-            CV codes are grouped into <strong>qualification lists</strong>. A verse references a list by
-            its key (e.g. <code>962</code>) rather than naming individual codes. The semantics are always
-            <em>OR</em>: a prescriber qualifies if they hold <em>any one</em> of the codes in the list.
-        </p>
-        <p>
-            Qualification requirements live on individual verses, not on paragraphs as a whole. In the
-            April 2026 SAM export, roughly 4.7% of paragraphs with terminal verses mix different
-            qualification requirements across those verses — meaning different reimbursement paths within
-            the same paragraph can be accessible to different professional categories. A paragraph is
-            considered applicable as long as at least one mandatory path is satisfiable.
-        </p>
-        <p class="text-muted small">
-            Note: the list names stored in SAM are internal admin labels (e.g. "list verse 58425") and
-            carry no useful semantic content. The table below therefore shows the member CV codes directly.
-        </p>
+<section class="mb-5">
+    <h4>Qualification Lists</h4>
+    <p>
+        CV codes are grouped into <strong>qualification lists</strong>. A verse references a list by
+        its key (e.g. <code>962</code>) rather than naming individual codes. The semantics are always
+        <em>OR</em>: a prescriber qualifies if they hold <em>any one</em> of the codes in the list.
+    </p>
+    <p>
+        Qualification requirements live on individual verses, not on paragraphs as a whole. In the
+        April 2026 SAM export, roughly 4.7% of paragraphs with terminal verses mix different
+        qualification requirements across those verses — meaning different reimbursement paths within
+        the same paragraph can be accessible to different professional categories. A paragraph is
+        considered applicable as long as at least one mandatory path is satisfiable.
+    </p>
+    <p class="text-muted small">
+        Note: the list names stored in SAM are internal admin labels (e.g. "list verse 58425") and
+        carry no useful semantic content. The table below therefore shows the member CV codes directly.
+    </p>
 
-        @{
-            var filteredLists = FilteredLists();
-        }
+    @{
+        var filteredLists = FilteredLists();
+    }
 
-        <div class="mb-2 d-flex align-items-center gap-2">
-            <input type="search" class="form-control form-control-sm"
-                   style="max-width: 320px"
-                   placeholder="Filter by list key or CV code / name…"
-                   @bind="listSearch" @bind:event="oninput" />
-            <span class="text-muted small">@filteredLists.Count of @allLists!.Count</span>
-        </div>
+    <div class="mb-2 d-flex align-items-center gap-2">
+        <input type="search" class="form-control form-control-sm"
+               style="max-width: 320px"
+               placeholder="Filter by list key or CV code / name…"
+               @bind="listSearch" @bind:event="oninput" />
+        <span class="text-muted small">@filteredLists.Count of @SamData.AllQualLists.Count</span>
+    </div>
 
-        <div style="max-height: 500px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px;">
-            <table class="table table-sm table-hover mb-0 align-top">
-                <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+    <div style="max-height: 500px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px;">
+        <table class="table table-sm table-hover mb-0 align-top">
+            <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+                <tr>
+                    <th style="width: 6rem">List key</th>
+                    <th style="width: 4rem" class="text-center">#</th>
+                    <th>CV codes</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var list in filteredLists)
+                {
                     <tr>
-                        <th style="width: 6rem">List key</th>
-                        <th style="width: 4rem" class="text-center">#</th>
-                        <th>CV codes</th>
+                        <td class="font-monospace">@list.ListKey</td>
+                        <td class="text-center text-muted">@list.Members.Count</td>
+                        <td>
+                            @foreach (var m in list.Members)
+                            {
+                                <div class="small">
+                                    <code>@m.ProfessionalCv</code>
+                                    @if (m.NlName is not null)
+                                    {
+                                        <span class="text-muted ms-1">— @m.NlName</span>
+                                    }
+                                </div>
+                            }
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var list in filteredLists)
-                    {
-                        <tr>
-                            <td class="font-monospace">@list.ListKey</td>
-                            <td class="text-center text-muted">@list.Members.Count</td>
-                            <td>
-                                @foreach (var m in list.Members)
-                                {
-                                    <div class="small">
-                                        <code>@m.ProfessionalCv</code>
-                                        @if (m.NlName is not null)
-                                        {
-                                            <span class="text-muted ms-1">— @m.NlName</span>
-                                        }
-                                    </div>
-                                }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </section>
-}
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
 
 @code {
-    private bool loading = true;
-    private List<QualificationMember>? allCvCodes;
-    private List<QualificationListInfo>? allLists;
     private string cvSearch = "";
     private string listSearch = "";
-    private readonly DateTime refDate = DateTime.Today;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await Task.Run(() =>
-        {
-            allCvCodes = SamData.Database.References!.ProfessionalCode
-                .Select(p => SamData.QualResolver.ResolveCv(p.ProfessionalCv, refDate))
-                .DistinctBy(m => m.ProfessionalCv)
-                .OrderBy(m => m.ProfessionalCv, StringComparer.Ordinal)
-                .ToList();
-
-            allLists = SamData.Database.ChapterIv!.QualificationList
-                .Select(q => SamData.QualResolver.Resolve(q.QualificationList, refDate))
-                .OfType<QualificationListInfo>()
-                .OrderBy(i => i.ListKey, StringComparer.Ordinal)
-                .ToList();
-        });
-        loading = false;
-    }
 
     private List<QualificationMember> FilteredCvCodes() =>
         string.IsNullOrWhiteSpace(cvSearch)
-            ? allCvCodes!
-            : allCvCodes!.Where(m =>
+            ? SamData.AllCvCodes
+            : SamData.AllCvCodes.Where(m =>
                 m.ProfessionalCv.Contains(cvSearch, StringComparison.OrdinalIgnoreCase) ||
                 (m.NlName?.Contains(cvSearch, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (m.FrName?.Contains(cvSearch, StringComparison.OrdinalIgnoreCase) ?? false))
@@ -171,8 +141,8 @@ else
 
     private List<QualificationListInfo> FilteredLists() =>
         string.IsNullOrWhiteSpace(listSearch)
-            ? allLists!
-            : allLists!.Where(i =>
+            ? SamData.AllQualLists
+            : SamData.AllQualLists.Where(i =>
                 i.ListKey.Contains(listSearch, StringComparison.OrdinalIgnoreCase) ||
                 i.Members.Any(m =>
                     m.ProfessionalCv.Contains(listSearch, StringComparison.OrdinalIgnoreCase) ||
