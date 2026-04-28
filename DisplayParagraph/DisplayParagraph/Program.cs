@@ -1,5 +1,6 @@
 using DisplayParagraph.Components;
 using DisplayParagraph.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +28,14 @@ else
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+// Honor X-Forwarded-Proto / -For from Caddy so generated URLs use https://
+// and remote-IP logging is correct. Caddy runs on 127.0.0.1 (loopback), which
+// the default KnownProxies/Networks already trust.
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+});
+
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 

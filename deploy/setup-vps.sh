@@ -105,6 +105,9 @@ PermitRootLogin no
 PasswordAuthentication no
 KbdInteractiveAuthentication no
 EOF
+# /run/sshd is normally created by sshd.service's RuntimeDirectory= but can
+# go missing right after an openssh-server upgrade — sshd -t fails without it.
+mkdir -p /run/sshd
 sshd -t                            # validate before reload
 systemctl reload ssh
 

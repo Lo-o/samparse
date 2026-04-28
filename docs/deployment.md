@@ -51,15 +51,26 @@ console (Server → Console).
 
 ### 5. Upload the SAM XML files
 
+`/var/lib/samparse` is owned by the `displayparagraph` app user. We briefly
+chown it to `deploy` for the upload, stream the files in via `tar | ssh`
+(works on stock Git Bash for Windows — no rsync needed), then restore
+ownership.
+
 From your **local machine**:
 ```bash
-rsync -avz --progress ./trial/SAM/ deploy@samparse.example.com:/var/lib/samparse/
+ssh deploy@samparse.example.com 'sudo chown -R deploy:deploy /var/lib/samparse'
+
+tar -czf - -C ./trial/SAM . \
+  | ssh deploy@samparse.example.com 'tar -xzf - -C /var/lib/samparse'
+
+ssh deploy@samparse.example.com \
+  'sudo chown -R displayparagraph:displayparagraph /var/lib/samparse'
 ```
 
 (Replace `deploy@samparse.example.com` with your SSH user@host.) The app
 currently only reads `CHAPTERIV-*.xml` and `REF-*.xml`, so you can save
-bandwidth by uploading just those two if you want — the loader skips
-missing files when their flag isn't requested.
+bandwidth by tarring just those two if you want — the loader skips missing
+files when their flag isn't requested.
 
 ### 6. Install the systemd unit
 
@@ -123,16 +134,27 @@ CHAPTERIV + REF (a handful of seconds).
 
 ### Updating the SAM dataset
 
-When SAM publishes a new export:
+When SAM publishes a new export, replace the XML files and restart:
 
 ```bash
-rsync -avz --delete --progress ./trial/SAM/CHAPTERIV-*.xml ./trial/SAM/REF-*.xml \
-    deploy@samparse.example.com:/var/lib/samparse/
-ssh deploy@samparse.example.com "sudo systemctl restart displayparagraph"
+ssh deploy@samparse.example.com '
+  set -e
+  sudo chown -R deploy:deploy /var/lib/samparse
+  rm -f /var/lib/samparse/CHAPTERIV-*.xml /var/lib/samparse/REF-*.xml
+'
+
+tar -czf - -C ./trial/SAM CHAPTERIV-*.xml REF-*.xml \
+  | ssh deploy@samparse.example.com 'tar -xzf - -C /var/lib/samparse'
+
+ssh deploy@samparse.example.com '
+  sudo chown -R displayparagraph:displayparagraph /var/lib/samparse
+  sudo systemctl restart displayparagraph
+'
 ```
 
-The `--delete` removes any older `CHAPTERIV-*.xml` files from the previous
-export so the loader picks the right one.
+The explicit `rm` first ensures any older `CHAPTERIV-*.xml` from the previous
+export is gone — the loader globs `{prefix}-*.xml` and picks the first match,
+so leaving a stale file behind would silently load the wrong export.
 
 ### Logs
 
