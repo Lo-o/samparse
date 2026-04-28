@@ -1,0 +1,17 @@
+# Caddy config for DisplayParagraph.
+# Replace the hostname with your real domain. Caddy auto-provisions a
+# Let's Encrypt cert on first start, provided the DNS A/AAAA record points
+# at this VPS and ports 80/443 are open in the firewall.
+
+samparse.example.com {
+    encode zstd gzip
+
+    # Blazor Server uses a long-lived SignalR WebSocket — Caddy's reverse_proxy
+    # passes Upgrade/Connection headers transparently, no extra config needed.
+    reverse_proxy 127.0.0.1:5000
+
+    log {
+        output file /var/log/caddy/displayparagraph.log
+        format console
+    }
+}

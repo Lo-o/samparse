@@ -1,0 +1,26 @@
+[Unit]
+Description=DisplayParagraph (SAM Chapter IV viewer)
+After=network.target
+
+[Service]
+Type=simple
+User=displayparagraph
+Group=displayparagraph
+WorkingDirectory=/opt/displayparagraph
+ExecStart=/usr/bin/dotnet /opt/displayparagraph/DisplayParagraph.dll
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGINT
+SyslogIdentifier=displayparagraph
+
+# Bind to localhost only — Caddy reverse-proxies from :443
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5000
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+
+# Modest hardening
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
