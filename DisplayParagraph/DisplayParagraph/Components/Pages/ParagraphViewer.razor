@@ -48,7 +48,15 @@
         </div>
     </div>
     <div class="filter-row">
-        <div class="filter-field" style="flex: 1 1 32rem; max-width: 36rem">
+        <div class="filter-field" style="flex: 0 0 11rem">
+            <label class="form-label">Request type</label>
+            <select @bind="requestType" class="form-select">
+                <option value="">—</option>
+                <option value="N">New prescription</option>
+                <option value="P">Renewal</option>
+            </select>
+        </div>
+        <div class="filter-field" style="flex: 1 1 24rem; max-width: 30rem">
             <label class="form-label">Doctor qualifications <span class="form-hint">(comma-separated CV codes)</span></label>
             <input @bind="doctorCvs" class="form-control font-monospace" placeholder="e.g. 668, 650" />
         </div>
@@ -63,7 +71,7 @@
 @if (rows is not null && loadedParagraph is not null)
 {
     var applicability = ApplicabilityChecker.CouldApplyTo(
-        loadedParagraph, BuildPatient(), BuildDoctor(), referenceDate, SamData.ChapterIvIndex);
+        loadedParagraph, BuildPatient(), BuildDoctor(), BuildIsRenewal(), referenceDate, SamData.ChapterIvIndex);
 
     <div class="callout @ApplicabilityCalloutClass(applicability)">
         <span class="callout-icon">@ApplicabilityIcon(applicability)</span>
@@ -88,6 +96,7 @@
                         <th>Text (NL)</th>
                         <th style="width:4rem" class="text-center" title="Sex restriction">Sex</th>
                         <th style="width:10rem" title="Age limits">Age limits</th>
+                        <th style="width:4rem" class="text-center" title="N = new prescription only, P = renewal only, blank = both">Req.</th>
                         <th style="width:8rem" title="Doctor qualification list">Qual.</th>
                     </tr>
                 </thead>
@@ -95,13 +104,20 @@
                     @foreach (var row in rows)
                     {
                         var verseCompat = ApplicabilityChecker.VerseCompatible(
-                            row.Data, BuildPatient(), BuildDoctor(), referenceDate, SamData.ChapterIvIndex);
-                        var rowClass = verseCompat == ApplicabilityResult.NotApplicable ? "table-warning" : "";
+                            row.Data, BuildPatient(), BuildDoctor(), BuildIsRenewal(), referenceDate, SamData.ChapterIvIndex);
+                        var isExclusion = row.Data.VerseTypeSpecified && row.Data.VerseType == VerseTypeType.E;
+                        var rowClass = string.Join(" ",
+                            verseCompat == ApplicabilityResult.NotApplicable ? "table-warning" : "",
+                            isExclusion ? "verse-exclusion" : "").Trim();
 
                         <tr class="@rowClass">
                             <td class="text-muted">@row.VerseSeq</td>
                             <td class="font-monospace">@row.Data.VerseNum</td>
                             <td style="padding-left: @(row.Data.VerseLevel * 24)px">
+                                @if (isExclusion)
+                                {
+                                    <span class="verse-tag verse-tag-exclusion" title="Exclusion verse — describes a condition under which reimbursement is not authorised">EXCL</span>
+                                }
                                 @if (row.Data.CheckBoxInd)
                                 {
                                     <span class="text-muted me-1" title="Checkbox alternative">☐</span>
@@ -110,6 +126,7 @@
                             </td>
                             <td class="text-center">@SexLabel(row.Data)</td>
                             <td>@AgeLimitsLabel(row.Data)</td>
+                            <td class="text-center font-monospace">@RequestTypeLabel(row.Data)</td>
                             <td class="font-monospace small">
                                 @if (!string.IsNullOrEmpty(row.Data.PurchasingAdvisorQualList))
                                 {
@@ -134,6 +151,7 @@
     private string patientSex = "";
     private decimal? patientAgeValue;
     private string patientAgeUnit = "Y";
+    private string requestType = "";
     private string doctorCvs = "";
 
     private List<VerseRow>? rows;
@@ -187,6 +205,17 @@
             .ToList();
         return codes.Count == 0 ? DoctorContext.Unknown : new DoctorContext(codes);
     }
+
+    private bool? BuildIsRenewal() => requestType switch
+    {
+        "N" => false,
+        "P" => true,
+        _   => null,
+    };
+
+    private static string RequestTypeLabel(VerseDataType data) =>
+        !data.RequestTypeSpecified ? "" :
+        data.RequestType == RequestTypeType.N ? "N" : "P";
 
     private static string ApplicabilityCalloutClass(ApplicabilityResult r) => r switch
     {

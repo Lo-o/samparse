@@ -26,7 +26,7 @@ foreach (var paragraphName in new[] { "12850000", "13780000" })
         ("female, 70 yr + CV 001",   new PatientContext(SexRestrictedType.F, 70),         new DoctorContext(["001"])),
     })
     {
-        var r = ApplicabilityChecker.CouldApplyTo(paragraph, patient, doctor, date, index);
+        var r = ApplicabilityChecker.CouldApplyTo(paragraph, patient, doctor, isRenewal: null, date, index);
         Console.WriteLine($"  {label,-30} -> {r}");
     }
 }

@@ -41,13 +41,14 @@ public sealed class ChapterIvIndex
 public static class ApplicabilityChecker
 {
     public static ApplicabilityResult VerseCompatible(
-        VerseDataType data, PatientContext patient, DoctorContext doctor, DateTime date, ChapterIvIndex index)
+        VerseDataType data, PatientContext patient, DoctorContext doctor, bool? isRenewal, DateTime date, ChapterIvIndex index)
     {
         var checks = new[]
         {
             CheckSex(data, patient),
             CheckAge(data, patient),
             CheckQualification(data, doctor, date, index),
+            CheckRequestType(data, isRenewal),
         };
         return
             checks.Any(r => r == ApplicabilityResult.NotApplicable) ? ApplicabilityResult.NotApplicable :
@@ -56,7 +57,7 @@ public static class ApplicabilityChecker
     }
 
     public static ApplicabilityResult CouldApplyTo(
-        ParagraphFullDataType paragraph, PatientContext patient, DoctorContext doctor, DateTime date, ChapterIvIndex index)
+        ParagraphFullDataType paragraph, PatientContext patient, DoctorContext doctor, bool? isRenewal, DateTime date, ChapterIvIndex index)
     {
         var active = paragraph.Verse
             .Select(v => (v.VerseSeq, Data: v.Data.FirstOrDefault(d => ChapterIvIndex.IsActive(d, date))))
@@ -72,51 +73,51 @@ public static class ApplicabilityChecker
             .Select(kv => kv.Key)
             .ToList();
 
-        return Combine(rootSeqs.Select(r => EvaluateChoice(r, active, childrenBy, patient, doctor, date, index)));
-    }
-
-    private static ApplicabilityResult EvaluateChoice(
-        int verseSeq,
-        IReadOnlyDictionary<int, VerseDataType> active,
-        IReadOnlyDictionary<int, List<int>> childrenBy,
-        PatientContext patient, DoctorContext doctor, DateTime date, ChapterIvIndex index)
-    {
-        var self = VerseCompatible(active[verseSeq], patient, doctor, date, index);
-        if (self == ApplicabilityResult.NotApplicable) return ApplicabilityResult.NotApplicable;
-
-        var subtree = EvaluateSubtree(verseSeq, active, childrenBy, patient, doctor, date, index);
-        return Worst(self, subtree);
-    }
-
-    private static ApplicabilityResult EvaluateSubtree(
-        int verseSeq,
-        IReadOnlyDictionary<int, VerseDataType> active,
-        IReadOnlyDictionary<int, List<int>> childrenBy,
-        PatientContext patient, DoctorContext doctor, DateTime date, ChapterIvIndex index)
-    {
-        var data = active[verseSeq];
-        var kids = childrenBy.GetValueOrDefault(verseSeq) ?? new List<int>();
-        var (checkboxKids, narrativeKids) = kids.Aggregate(
-            (cb: new List<int>(), nr: new List<int>()),
-            (acc, k) => { (active[k].CheckBoxInd ? acc.cb : acc.nr).Add(k); return acc; });
-
-        var narrative = Combine(narrativeKids.Select(k =>
-            EvaluateChoice(k, active, childrenBy, patient, doctor, date, index)));
-        if (narrative == ApplicabilityResult.NotApplicable) return ApplicabilityResult.NotApplicable;
-
-        var mandatory = ApplicabilityResult.Applicable;
-        if (data.MinCheckNum > 0 && checkboxKids.Count > 0)
+        // AndClauseNum: verses sharing a number must be co-selectable. If any member
+        // is incompatible, the whole group is — propagate the worst back to each member.
+        var andAdj = new Dictionary<int, ApplicabilityResult>();
+        foreach (var group in active.Where(kv => kv.Value.AndClauseNumSpecified)
+                                    .GroupBy(kv => kv.Value.AndClauseNum)
+                                    .Where(g => g.Count() > 1))
         {
-            var childResults = checkboxKids
-                .Select(k => EvaluateChoice(k, active, childrenBy, patient, doctor, date, index))
-                .ToList();
-            var definitely = childResults.Count(r => r == ApplicabilityResult.Applicable);
-            var possibly   = childResults.Count(r => r != ApplicabilityResult.NotApplicable);
-            if (possibly < data.MinCheckNum) return ApplicabilityResult.NotApplicable;
-            if (definitely < data.MinCheckNum) mandatory = ApplicabilityResult.Unknown;
+            var combined = Combine(group.Select(kv => VerseCompatible(kv.Value, patient, doctor, isRenewal, date, index)));
+            foreach (var kv in group) andAdj[kv.Key] = combined;
         }
 
-        return Worst(narrative, mandatory);
+        ApplicabilityResult EvaluateChoice(int verseSeq)
+        {
+            var self = VerseCompatible(active[verseSeq], patient, doctor, isRenewal, date, index);
+            if (andAdj.TryGetValue(verseSeq, out var groupAdj)) self = Worst(self, groupAdj);
+            if (self == ApplicabilityResult.NotApplicable) return ApplicabilityResult.NotApplicable;
+
+            return Worst(self, EvaluateSubtree(verseSeq));
+        }
+
+        ApplicabilityResult EvaluateSubtree(int verseSeq)
+        {
+            var data = active[verseSeq];
+            var kids = childrenBy.GetValueOrDefault(verseSeq) ?? new List<int>();
+            var (checkboxKids, narrativeKids) = kids.Aggregate(
+                (cb: new List<int>(), nr: new List<int>()),
+                (acc, k) => { (active[k].CheckBoxInd ? acc.cb : acc.nr).Add(k); return acc; });
+
+            var narrative = Combine(narrativeKids.Select(EvaluateChoice));
+            if (narrative == ApplicabilityResult.NotApplicable) return ApplicabilityResult.NotApplicable;
+
+            var mandatory = ApplicabilityResult.Applicable;
+            if (data.MinCheckNum > 0 && checkboxKids.Count > 0)
+            {
+                var childResults = checkboxKids.Select(EvaluateChoice).ToList();
+                var definitely = childResults.Count(r => r == ApplicabilityResult.Applicable);
+                var possibly   = childResults.Count(r => r != ApplicabilityResult.NotApplicable);
+                if (possibly < data.MinCheckNum) return ApplicabilityResult.NotApplicable;
+                if (definitely < data.MinCheckNum) mandatory = ApplicabilityResult.Unknown;
+            }
+
+            return Worst(narrative, mandatory);
+        }
+
+        return Combine(rootSeqs.Select(EvaluateChoice));
     }
 
     private static ApplicabilityResult CheckSex(VerseDataType data, PatientContext patient) =>
@@ -148,6 +149,16 @@ public static class ApplicabilityChecker
         if (doctor.ProfessionalCvs.Count == 0) return ApplicabilityResult.Unknown;
         var allowed = index.ActiveCvsFor(data.PurchasingAdvisorQualList, date);
         return doctor.ProfessionalCvs.Any(allowed.Contains)
+            ? ApplicabilityResult.Applicable
+            : ApplicabilityResult.NotApplicable;
+    }
+
+    private static ApplicabilityResult CheckRequestType(VerseDataType data, bool? isRenewal)
+    {
+        if (!data.RequestTypeSpecified) return ApplicabilityResult.Applicable;
+        if (isRenewal is null) return ApplicabilityResult.Unknown;
+        var verseIsRenewal = data.RequestType == RequestTypeType.P;
+        return verseIsRenewal == isRenewal.Value
             ? ApplicabilityResult.Applicable
             : ApplicabilityResult.NotApplicable;
     }

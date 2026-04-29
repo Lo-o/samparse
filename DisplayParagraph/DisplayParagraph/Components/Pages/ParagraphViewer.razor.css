@@ -35,3 +35,30 @@
     color: var(--ink-muted);
     margin-left: 0.35rem;
 }
+
+::deep .verse-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    padding: 0.05rem 0.4rem;
+    border-radius: 2px;
+    margin-right: 0.5rem;
+    vertical-align: 0.1em;
+}
+
+::deep .verse-tag-exclusion {
+    background-color: var(--bad-soft);
+    color: var(--bad);
+    border: 1px solid var(--bad);
+}
+
+::deep tr.verse-exclusion td {
+    color: var(--ink-soft);
+    font-style: italic;
+}
+
+::deep tr.verse-exclusion.table-warning td {
+    font-style: italic;
+}
+
