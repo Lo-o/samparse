@@ -73,18 +73,12 @@
                 <option value="F">Female (F)</option>
             </select>
         </div>
-        <div class="filter-field" style="flex: 0 0 7rem">
-            <label class="form-label">Patient age</label>
-            <input type="number" min="0" @bind="patientAgeValue" class="form-control" placeholder="—" />
-        </div>
-        <div class="filter-field" style="flex: 0 0 5rem">
-            <label class="form-label">Unit</label>
-            <select @bind="patientAgeUnit" class="form-select">
-                <option value="Y">Y</option>
-                <option value="M">M</option>
-                <option value="W">W</option>
-                <option value="D">D</option>
-            </select>
+        <div class="filter-field" style="flex: 0 0 12rem">
+            <label class="form-label">
+                Patient date of birth
+                <span class="form-hint">@PatientAgeHint()</span>
+            </label>
+            <input type="date" @bind="patientDob" @bind:event="oninput" class="form-control" />
         </div>
         <div class="filter-field filter-action">
             <button class="btn btn-primary" @onclick="Load">Load</button>
@@ -192,8 +186,7 @@
     private string paragraphName = "";
     private DateTime referenceDate = DateTime.Today;
     private string patientSex = "";
-    private decimal? patientAgeValue;
-    private string patientAgeUnit = "Y";
+    private DateTime? patientDob;
     private string requestType = "";
     private string doctorCvs = "";
 
@@ -238,8 +231,30 @@
 
     private PatientContext BuildPatient() => new(
         Sex: patientSex switch { "F" => SexRestrictedType.F, "M" => SexRestrictedType.M, _ => null },
-        Age: patientAgeValue,
-        AgeUnit: Enum.Parse<DurationUnitType>(patientAgeUnit));
+        DateOfBirth: patientDob is { } dob ? DateOnly.FromDateTime(dob) : null);
+
+    private string PatientAgeHint()
+    {
+        if (patientDob is not { } dob) return "";
+        var d = DateOnly.FromDateTime(dob);
+        var r = DateOnly.FromDateTime(referenceDate);
+        if (d > r) return "(after reference date)";
+
+        var years  = r.Year  - d.Year;
+        var months = r.Month - d.Month;
+        var days   = r.Day   - d.Day;
+        if (days < 0)
+        {
+            var prev = r.AddMonths(-1);
+            days += DateTime.DaysInMonth(prev.Year, prev.Month);
+            months--;
+        }
+        if (months < 0) { months += 12; years--; }
+
+        if (years  > 0) return $"({years} yr {months} mo on {referenceDate:yyyy-MM-dd})";
+        if (months > 0) return $"({months} mo {days} d on {referenceDate:yyyy-MM-dd})";
+        return $"({days} d on {referenceDate:yyyy-MM-dd})";
+    }
 
     private DoctorContext BuildDoctor()
     {

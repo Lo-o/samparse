@@ -78,7 +78,7 @@ The path is resolved relative to the server project's content root (i.e. `Displa
 
 ### Paragraph Viewer page
 
-Inputs: paragraph name, reference date (defaults to today), patient sex, patient age + unit.
+Inputs: paragraph name, reference date (defaults to today), patient sex, patient date of birth (the resolved age on the reference date is shown next to the field).
 
 On load it finds all `VerseFullDataType` entries for the paragraph, selects the one `VerseDataType` per verse that is active on the reference date (`From ≤ date` and either `ToSpecified` is false or `To ≥ date`), then displays them in a table:
 
@@ -88,7 +88,7 @@ On load it finds all `VerseFullDataType` entries for the paragraph, selects the 
 | Verse # | `VerseDataType.VerseNum` |
 | Text (NL) | `VerseDataType.TextNl`, indented by `VerseLevel × 24 px` |
 | Sex | `VerseDataType.SexRestricted` (♀ / ♂) when `SexRestrictedSpecified` |
-| Age limits | Formatted from `MinimumAgeAuthorized` / `MaximumAgeAuthorized` + unit; shows ✓/✗ when patient age is supplied |
+| Age limits | Formatted from `MinimumAgeAuthorized` / `MaximumAgeAuthorized` + unit |
 
 Rows where the patient's sex or age falls outside the verse restriction are highlighted in yellow.
 

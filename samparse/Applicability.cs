@@ -7,8 +7,7 @@ public enum ApplicabilityResult { Applicable, NotApplicable, Unknown }
 
 public record PatientContext(
     SexRestrictedType? Sex = null,
-    decimal? Age = null,
-    DurationUnitType AgeUnit = DurationUnitType.Y);
+    DateOnly? DateOfBirth = null);
 
 public record DoctorContext(IReadOnlyCollection<string> ProfessionalCvs)
 {
@@ -46,7 +45,7 @@ public static class ApplicabilityChecker
         var checks = new[]
         {
             CheckSex(data, patient),
-            CheckAge(data, patient),
+            CheckAge(data, patient, date),
             CheckQualification(data, doctor, date, index),
             CheckRequestType(data, isRenewal),
         };
@@ -59,24 +58,52 @@ public static class ApplicabilityChecker
     public static ApplicabilityResult CouldApplyTo(
         ParagraphFullDataType paragraph, PatientContext patient, DoctorContext doctor, bool? isRenewal, DateTime date, ChapterIvIndex index)
     {
-        var active = paragraph.Verse
+        var activeByDate = paragraph.Verse
             .Select(v => (v.VerseSeq, Data: v.Data.FirstOrDefault(d => ChapterIvIndex.IsActive(d, date))))
             .Where(t => t.Data is not null)
             .ToDictionary(t => t.VerseSeq, t => t.Data!);
 
-        var childrenBy = active
+        // RequestType marks which procedural branch a verse belongs to (new vs renewal),
+        // not a constraint to satisfy: a verse tagged for the off-scenario describes a
+        // different path through the paragraph and should be pruned rather than fail
+        // the narrative AND. Pruning is transitive — descendants of a pruned verse are
+        // scoped to the same branch. With prescription type unknown we don't prune;
+        // CheckRequestType then yields Unknown and propagates up.
+        bool MatchesScenario(VerseDataType d) =>
+            !d.RequestTypeSpecified || isRenewal is null
+                || (d.RequestType == RequestTypeType.P) == isRenewal.Value;
+
+        var dateChildrenBy = activeByDate
+            .GroupBy(kv => kv.Value.VerseSeqParent)
+            .ToDictionary(g => g.Key, g => g.Select(kv => kv.Key).ToList());
+        var dateRoots = activeByDate
+            .Where(kv => !activeByDate.ContainsKey(kv.Value.VerseSeqParent))
+            .Select(kv => kv.Key);
+
+        var activeVersesByVerseSeq = new Dictionary<int, VerseDataType>();
+        var queue = new Queue<int>();
+        foreach (var seq in dateRoots)
+            if (MatchesScenario(activeByDate[seq])) { activeVersesByVerseSeq[seq] = activeByDate[seq]; queue.Enqueue(seq); }
+        while (queue.Count > 0)
+        {
+            var parent = queue.Dequeue();
+            foreach (var child in dateChildrenBy.GetValueOrDefault(parent) ?? new List<int>())
+                if (MatchesScenario(activeByDate[child])) { activeVersesByVerseSeq[child] = activeByDate[child]; queue.Enqueue(child); }
+        }
+
+        var childrenBy = activeVersesByVerseSeq
             .GroupBy(kv => kv.Value.VerseSeqParent)
             .ToDictionary(g => g.Key, g => g.Select(kv => kv.Key).ToList());
 
-        var rootSeqs = active
-            .Where(kv => !active.ContainsKey(kv.Value.VerseSeqParent))
+        var rootSeqs = activeVersesByVerseSeq
+            .Where(kv => !activeVersesByVerseSeq.ContainsKey(kv.Value.VerseSeqParent))
             .Select(kv => kv.Key)
             .ToList();
 
         // AndClauseNum: verses sharing a number must be co-selectable. If any member
         // is incompatible, the whole group is — propagate the worst back to each member.
         var andAdj = new Dictionary<int, ApplicabilityResult>();
-        foreach (var group in active.Where(kv => kv.Value.AndClauseNumSpecified)
+        foreach (var group in activeVersesByVerseSeq.Where(kv => kv.Value.AndClauseNumSpecified)
                                     .GroupBy(kv => kv.Value.AndClauseNum)
                                     .Where(g => g.Count() > 1))
         {
@@ -86,7 +113,7 @@ public static class ApplicabilityChecker
 
         ApplicabilityResult EvaluateChoice(int verseSeq)
         {
-            var self = VerseCompatible(active[verseSeq], patient, doctor, isRenewal, date, index);
+            var self = VerseCompatible(activeVersesByVerseSeq[verseSeq], patient, doctor, isRenewal, date, index);
             if (andAdj.TryGetValue(verseSeq, out var groupAdj)) self = Worst(self, groupAdj);
             if (self == ApplicabilityResult.NotApplicable) return ApplicabilityResult.NotApplicable;
 
@@ -95,11 +122,11 @@ public static class ApplicabilityChecker
 
         ApplicabilityResult EvaluateSubtree(int verseSeq)
         {
-            var data = active[verseSeq];
+            var data = activeVersesByVerseSeq[verseSeq];
             var kids = childrenBy.GetValueOrDefault(verseSeq) ?? new List<int>();
             var (checkboxKids, narrativeKids) = kids.Aggregate(
                 (cb: new List<int>(), nr: new List<int>()),
-                (acc, k) => { (active[k].CheckBoxInd ? acc.cb : acc.nr).Add(k); return acc; });
+                (acc, k) => { (activeVersesByVerseSeq[k].CheckBoxInd ? acc.cb : acc.nr).Add(k); return acc; });
 
             var narrative = Combine(narrativeKids.Select(EvaluateChoice));
             if (narrative == ApplicabilityResult.NotApplicable) return ApplicabilityResult.NotApplicable;
@@ -126,28 +153,33 @@ public static class ApplicabilityChecker
         data.SexRestricted == patient.Sex ? ApplicabilityResult.Applicable :
                                               ApplicabilityResult.NotApplicable;
 
-    private static ApplicabilityResult CheckAge(VerseDataType data, PatientContext patient)
+    private static ApplicabilityResult CheckAge(VerseDataType data, PatientContext patient, DateTime date)
     {
         if (!data.MinimumAgeAuthorizedSpecified && !data.MaximumAgeAuthorizedSpecified)
             return ApplicabilityResult.Applicable;
-        if (patient.Age is null) return ApplicabilityResult.Unknown;
+        if (patient.DateOfBirth is null) return ApplicabilityResult.Unknown;
 
-        var patientDays = ToDays(patient.Age.Value, patient.AgeUnit);
+        var dob = patient.DateOfBirth.Value;
+        var refDate = DateOnly.FromDateTime(date);
+
+        // Min is inclusive: patient must have reached the Nth-unit anniversary.
         if (data.MinimumAgeAuthorizedSpecified &&
-            patientDays < ToDays(data.MinimumAgeAuthorized, data.MinimumAgeAuthorizedUnit))
+            AddDuration(dob, WholeUnits(data.MinimumAgeAuthorized), data.MinimumAgeAuthorizedUnit) > refDate)
             return ApplicabilityResult.NotApplicable;
+        // Max is strict: patient must not yet have reached the (N+1)th-unit anniversary.
         if (data.MaximumAgeAuthorizedSpecified &&
-            patientDays > ToDays(data.MaximumAgeAuthorized, data.MaximumAgeAuthorizedUnit))
+            AddDuration(dob, WholeUnits(data.MaximumAgeAuthorized) + 1, data.MaximumAgeAuthorizedUnit) <= refDate)
             return ApplicabilityResult.NotApplicable;
+
         return ApplicabilityResult.Applicable;
     }
 
     private static ApplicabilityResult CheckQualification(
-        VerseDataType data, DoctorContext doctor, DateTime date, ChapterIvIndex index)
+        VerseDataType verse, DoctorContext doctor, DateTime date, ChapterIvIndex index)
     {
-        if (string.IsNullOrEmpty(data.PurchasingAdvisorQualList)) return ApplicabilityResult.Applicable;
+        if (string.IsNullOrEmpty(verse.PurchasingAdvisorQualList)) return ApplicabilityResult.Applicable;
         if (doctor.ProfessionalCvs.Count == 0) return ApplicabilityResult.Unknown;
-        var allowed = index.ActiveCvsFor(data.PurchasingAdvisorQualList, date);
+        var allowed = index.ActiveCvsFor(verse.PurchasingAdvisorQualList, date);
         return doctor.ProfessionalCvs.Any(allowed.Contains)
             ? ApplicabilityResult.Applicable
             : ApplicabilityResult.NotApplicable;
@@ -163,14 +195,22 @@ public static class ApplicabilityChecker
             : ApplicabilityResult.NotApplicable;
     }
 
-    private static double ToDays(decimal value, DurationUnitType unit) => unit switch
+    private static DateOnly AddDuration(DateOnly start, int n, DurationUnitType unit) => unit switch
     {
-        DurationUnitType.D => (double)value,
-        DurationUnitType.W => (double)value * 7,
-        DurationUnitType.M => (double)value * 30.4375,
-        DurationUnitType.Y => (double)value * 365.25,
-        _                  => (double)value,
+        DurationUnitType.D => start.AddDays(n),
+        DurationUnitType.W => start.AddDays(n * 7),
+        DurationUnitType.M => start.AddMonths(n),
+        DurationUnitType.Y => start.AddYears(n),
+        _                  => start.AddDays(n),
     };
+
+    // Schema permits Decimal3d1Type but historically every value is integral.
+    // Reject anything fractional so a future schema drift surfaces loudly instead of truncating.
+    private static int WholeUnits(decimal value) =>
+        value == Math.Floor(value)
+            ? (int)value
+            : throw new InvalidOperationException(
+                $"Age limit {value} is not a whole number; SAM data has only contained integers.");
 
     private static ApplicabilityResult Worst(ApplicabilityResult a, ApplicabilityResult b) =>
         a == ApplicabilityResult.NotApplicable || b == ApplicabilityResult.NotApplicable ? ApplicabilityResult.NotApplicable :

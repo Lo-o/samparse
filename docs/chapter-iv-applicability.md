@@ -11,7 +11,7 @@ Every restriction is attached to a `VerseDataType` (the versioned payload of a `
 | Field | Meaning |
 |---|---|
 | `SexRestricted` (+ `Specified`) | `F` or `M`; verse only applies to that sex |
-| `MinimumAgeAuthorized` / `MaximumAgeAuthorized` (+ `Unit` + `Specified`) | Inclusive age bounds, expressed in `D` / `W` / `M` / `Y` |
+| `MinimumAgeAuthorized` / `MaximumAgeAuthorized` (+ `Unit` + `Specified`) | Age bounds expressed in `D` / `W` / `M` / `Y`. Min is inclusive (`≥ N`); max is strict (`< N+1`, i.e. patient has not yet reached the next anniversary). Compared via calendar arithmetic against the patient's `DateOfBirth` and the reference date — values are integral in the reference data despite the schema's `Decimal3d1Type` |
 | `PurchasingAdvisorQualList` | FK (string key) to a `QualificationListFullDataType` listing authorised prescriber codes |
 | `RequestType` (+ `Specified`) | `N` = new prescription only, `P` = renewal only, absent = either |
 | `VerseType` (+ `Specified`) | Currently only `E` = exclusion verse (legislation phrased as "X is not authorised") |
@@ -62,13 +62,30 @@ Frequency in the reference export (April 2026):
 
 ## 5. RequestType — new vs. renewal
 
-`RequestType` gates verses by whether the prescription is a first request (`N`) or a renewal/prolongation (`P`). Roughly half of all typed verses in the reference export carry one or the other, so this is a primary filter:
+`RequestType` marks which procedural branch a verse describes — the new-request path (`N`) or the renewal path (`P`). Crucially this is a **scenario filter**, not a constraint to satisfy: a verse tagged for the off-scenario isn't "violated" by a different prescription, it simply describes a different path through the paragraph that doesn't apply.
 
-- A verse with `RequestType = N` is only applicable when the prescription is **new**.
-- A verse with `RequestType = P` is only applicable when the prescription is a **renewal**.
+This matters because paragraphs frequently have two narrative siblings under the same parent — one tagged `N` describing the entry procedure, one tagged `P` describing the renewal procedure (e.g. paragraph `8410000`'s c/d clauses). AND-combining them as constraints would make every concrete prescription type produce `NotApplicable`, since one of the two will always fail.
+
+Behaviour:
+
+- A verse with `RequestType = N` describes the new-request branch.
+- A verse with `RequestType = P` describes the renewal branch.
 - A verse without `RequestType` applies to both.
 
-The prescription's request type flows through `CouldApplyTo` / `VerseCompatible` as `bool? isRenewal` (null ⇒ unknown, propagates as `Unknown`).
+`CouldApplyTo` handles this by **pruning the verse tree before evaluation**: when `isRenewal` is non-null, any verse whose `RequestType` disagrees is removed along with its entire subtree (descendants are scoped to the same branch). The remaining tree is evaluated with the usual narrative-AND / checkbox-MinCheck logic. When `isRenewal` is null no pruning happens and `CheckRequestType` yields `Unknown`, propagating up.
+
+`VerseCompatible` (the per-verse predicate used by the viewer to highlight individual rows) keeps the literal "tag mismatch ⇒ `NotApplicable`" semantics so off-scenario rows can be visually flagged. The pruning lives only at the paragraph-rollup level.
+
+### Distribution in the reference export (2026-04-29)
+
+| Pattern                          | Paragraphs |
+|---|---:|
+| Both `N` and `P` verses          | 473 |
+| `N`-only (no renewal procedure)  | 500 |
+| `P`-only (renewal-tagged only)   |  24 |
+| Neither (no `RequestType` tags)  | 809 |
+
+The 24 "P-only" paragraphs are an artefact of incomplete tagging — sampling shows their entry procedure exists in untagged narrative verses (e.g. `2380000`), with only the renewal-specific clause carrying `RequestType=P`. Pruning is correct in either case: untagged verses survive both scenarios, scenario-tagged verses survive only their own.
 
 ## 6. `AndClauseNum` — cross-branch coupling
 
@@ -92,9 +109,12 @@ Top-level pseudocode (see `samparse/Applicability.cs` for the real thing):
 
 ```
 CouldApplyTo(paragraph, patient, doctor, isRenewal, date, index):
-  active     = pick the VerseDataType per verse active on `date`
-  childrenBy = group by VerseSeqParent
-  rootSeqs   = verses whose parent isn't in `active`
+  activeByDate = pick the VerseDataType per verse active on `date`
+  active       = top-down BFS from roots, dropping any verse whose RequestType
+                 disagrees with isRenewal (and its whole subtree). When isRenewal
+                 is null, no scenario-pruning happens.
+  childrenBy   = group by VerseSeqParent (over `active`)
+  rootSeqs     = verses whose parent isn't in `active`
 
   # Precompute AndClauseNum group adjustments
   for each group of verses sharing AndClauseNum (size > 1):
@@ -151,3 +171,6 @@ Hand-checked against the April 2026 SAM export (`CHAPTERIV-1775613877335.xml`):
 | `13780000` | female, age 70, CV `"001"` | `NotApplicable` | Doctor CV not in qualification list `962` |
 | `13780000` | female, age 70, CV `"668"` | `Applicable` | CV `"668"` is in qualification list `962` |
 | `13780000` | female, age 70, no doctor | `Unknown` | Qualification requirement exists, doctor info missing |
+| `8410000` (heart failure) | adult male, cardiologist (CV 730), `isRenewal=false` | `Applicable` | RequestType-pruning drops the renewal-only sibling (verse `d`); the new-request branch (verse `c`, qual list 422) holds |
+| `8410000` | adult male, cardiologist, `isRenewal=true` | `Applicable` | Same in reverse: new-request sibling pruned, renewal branch (qual list 625) holds |
+| `8410000` | adult male, cardiologist, `isRenewal=null` | `Unknown` | Both `RequestType`-tagged siblings remain and both yield `Unknown` for an unspecified prescription |

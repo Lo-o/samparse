@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet build *)"
+      "Bash(dotnet build *)",
+      "Bash(curl -s -o /tmp/qual.html -w \"HTTP %{http_code}\\\\n\" http://localhost:5193/qualifications)",
+      "Bash(curl -s -o /tmp/root.html -w \"HTTP %{http_code}\\\\n\" http://localhost:5193/)",
+      "Bash(dotnet run *)"
     ]
   }
 }
