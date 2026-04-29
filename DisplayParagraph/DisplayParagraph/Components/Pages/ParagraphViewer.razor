@@ -8,51 +8,49 @@
 
 <PageTitle>Paragraph Viewer</PageTitle>
 
-<h2 class="mb-4">Chapter IV Paragraph Viewer</h2>
+<h2>Chapter IV Paragraph Viewer</h2>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <div class="row g-3 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label">Paragraph</label>
-                <input @bind="paragraphName" @bind:event="oninput"
-                       @onkeydown="OnKeyDown"
-                       class="form-control" placeholder="e.g. 12850000" />
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Reference date</label>
-                <input type="date" @bind="referenceDate" class="form-control" />
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Patient sex</label>
-                <select @bind="patientSex" class="form-select">
-                    <option value="">—</option>
-                    <option value="M">Male (M)</option>
-                    <option value="F">Female (F)</option>
-                </select>
-            </div>
-            <div class="col-sm-6 col-md-2">
-                <label class="form-label">Patient age</label>
-                <input type="number" min="0" @bind="patientAgeValue" class="form-control" placeholder="—" />
-            </div>
-            <div class="col-sm-6 col-md-1">
-                <label class="form-label">Unit</label>
-                <select @bind="patientAgeUnit" class="form-select">
-                    <option value="Y">Y</option>
-                    <option value="M">M</option>
-                    <option value="W">W</option>
-                    <option value="D">D</option>
-                </select>
-            </div>
-            <div class="col-md-1">
-                <button class="btn btn-primary w-100" @onclick="Load">Load</button>
-            </div>
+<div class="filter-bar">
+    <div class="filter-row">
+        <div class="filter-field" style="flex: 0 0 14rem">
+            <label class="form-label">Paragraph</label>
+            <input @bind="paragraphName" @bind:event="oninput"
+                   @onkeydown="OnKeyDown"
+                   class="form-control font-monospace" placeholder="e.g. 12850000" />
         </div>
-        <div class="row g-3 mt-1">
-            <div class="col-md-6">
-                <label class="form-label">Doctor qualifications (comma-separated Professional CV codes)</label>
-                <input @bind="doctorCvs" class="form-control" placeholder="e.g. 668, 650" />
-            </div>
+        <div class="filter-field" style="flex: 0 0 11rem">
+            <label class="form-label">Reference date</label>
+            <input type="date" @bind="referenceDate" class="form-control" />
+        </div>
+        <div class="filter-field" style="flex: 0 0 9rem">
+            <label class="form-label">Patient sex</label>
+            <select @bind="patientSex" class="form-select">
+                <option value="">—</option>
+                <option value="M">Male (M)</option>
+                <option value="F">Female (F)</option>
+            </select>
+        </div>
+        <div class="filter-field" style="flex: 0 0 7rem">
+            <label class="form-label">Patient age</label>
+            <input type="number" min="0" @bind="patientAgeValue" class="form-control" placeholder="—" />
+        </div>
+        <div class="filter-field" style="flex: 0 0 5rem">
+            <label class="form-label">Unit</label>
+            <select @bind="patientAgeUnit" class="form-select">
+                <option value="Y">Y</option>
+                <option value="M">M</option>
+                <option value="W">W</option>
+                <option value="D">D</option>
+            </select>
+        </div>
+        <div class="filter-field filter-action">
+            <button class="btn btn-primary" @onclick="Load">Load</button>
+        </div>
+    </div>
+    <div class="filter-row">
+        <div class="filter-field" style="flex: 1 1 32rem; max-width: 36rem">
+            <label class="form-label">Doctor qualifications <span class="form-hint">(comma-separated CV codes)</span></label>
+            <input @bind="doctorCvs" class="form-control font-monospace" placeholder="e.g. 668, 650" />
         </div>
     </div>
 </div>
@@ -67,11 +65,11 @@
     var applicability = ApplicabilityChecker.CouldApplyTo(
         loadedParagraph, BuildPatient(), BuildDoctor(), referenceDate, SamData.ChapterIvIndex);
 
-    <div class="alert @ApplicabilityAlertClass(applicability) d-flex align-items-center">
-        <span class="fs-4 me-2">@ApplicabilityIcon(applicability)</span>
+    <div class="callout @ApplicabilityCalloutClass(applicability)">
+        <span class="callout-icon">@ApplicabilityIcon(applicability)</span>
         <div>
-            <strong>Paragraph applicability: @applicability</strong>
-            <div class="small">@ApplicabilityExplanation(applicability)</div>
+            <div class="callout-title">Paragraph applicability: @applicability</div>
+            <div class="callout-body">@ApplicabilityExplanation(applicability)</div>
         </div>
     </div>
 
@@ -190,11 +188,11 @@
         return codes.Count == 0 ? DoctorContext.Unknown : new DoctorContext(codes);
     }
 
-    private static string ApplicabilityAlertClass(ApplicabilityResult r) => r switch
+    private static string ApplicabilityCalloutClass(ApplicabilityResult r) => r switch
     {
-        ApplicabilityResult.Applicable    => "alert-success",
-        ApplicabilityResult.NotApplicable => "alert-danger",
-        _                                 => "alert-warning",
+        ApplicabilityResult.Applicable    => "callout-good",
+        ApplicabilityResult.NotApplicable => "callout-bad",
+        _                                 => "callout-warn",
     };
 
     private static string ApplicabilityIcon(ApplicabilityResult r) => r switch

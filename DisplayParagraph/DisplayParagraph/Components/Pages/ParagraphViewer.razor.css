@@ -1,0 +1,37 @@
+.filter-bar {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.85rem;
+}
+
+.filter-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.filter-action {
+    align-self: flex-end;
+}
+
+.filter-action ::deep .btn {
+    padding: 0.4rem 1.25rem;
+}
+
+.form-hint {
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+    color: var(--ink-muted);
+    margin-left: 0.35rem;
+}
