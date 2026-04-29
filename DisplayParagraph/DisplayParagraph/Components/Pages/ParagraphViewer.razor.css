@@ -1,3 +1,76 @@
+.page-byline {
+    color: var(--ink-soft);
+    margin: -0.4rem 0 1rem;
+    max-width: 56rem;
+    font-size: 0.93rem;
+}
+
+.page-howto {
+    margin: 0 0 1.5rem;
+    border: 1px solid var(--rule);
+    background-color: var(--surface);
+    border-radius: 3px;
+    max-width: 56rem;
+}
+
+.page-howto > summary {
+    cursor: pointer;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+    list-style: none;
+    user-select: none;
+}
+
+.page-howto > summary::-webkit-details-marker {
+    display: none;
+}
+
+.page-howto > summary::before {
+    content: "▸";
+    display: inline-block;
+    margin-right: 0.5rem;
+    color: var(--ink-muted);
+    transition: transform 0.1s ease;
+}
+
+.page-howto[open] > summary::before {
+    transform: rotate(90deg);
+}
+
+.page-howto > summary:hover {
+    color: var(--ink);
+}
+
+.page-howto-body {
+    padding: 0.25rem 1.1rem 0.85rem 2rem;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    border-top: 1px solid var(--rule);
+    margin-top: 0.1rem;
+}
+
+.page-howto-body ul {
+    margin: 0.6rem 0 0.5rem;
+    padding-left: 1.1rem;
+}
+
+.page-howto-body li {
+    margin-bottom: 0.35rem;
+}
+
+.page-howto-body strong {
+    color: var(--ink);
+    font-weight: 600;
+}
+
+.page-howto-link {
+    margin: 0.7rem 0 0;
+    font-size: 0.88rem;
+}
+
 .filter-bar {
     margin-bottom: 1.5rem;
     padding-bottom: 1.25rem;

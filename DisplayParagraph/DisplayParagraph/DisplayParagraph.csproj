@@ -11,6 +11,11 @@
     <ProjectReference Include="..\DisplayParagraph.Client\DisplayParagraph.Client.csproj" />
     <ProjectReference Include="..\..\samparse\samparse.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.6" />
+    <PackageReference Include="Markdig" Version="0.42.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\docs\*.md" Link="Docs\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

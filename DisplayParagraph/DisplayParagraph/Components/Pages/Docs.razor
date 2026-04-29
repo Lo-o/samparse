@@ -1,0 +1,27 @@
+@page "/docs/{Slug}"
+@using DisplayParagraph.Services
+@inject DocsService DocsSvc
+
+@if (doc is null)
+{
+    <PageTitle>Not found</PageTitle>
+    <h2>Document not found</h2>
+    <p class="text-muted">No doc registered for slug <code>@Slug</code>.</p>
+}
+else
+{
+    <PageTitle>@doc.Title</PageTitle>
+    <article class="markdown-body">
+        @((MarkupString)doc.Html)
+    </article>
+}
+
+@code {
+    [Parameter] public string? Slug { get; set; }
+    private RenderedDoc? doc;
+
+    protected override void OnParametersSet()
+    {
+        doc = Slug is null ? null : DocsSvc.Get(Slug);
+    }
+}

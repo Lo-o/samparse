@@ -1,0 +1,116 @@
+.markdown-body {
+    max-width: 52rem;
+    line-height: 1.65;
+    color: var(--ink);
+    font-size: 0.95rem;
+}
+
+.markdown-body ::deep h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 0.6rem;
+    border-bottom: 2px solid var(--rule-strong);
+}
+
+.markdown-body ::deep h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 2.2rem 0 0.8rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--rule);
+}
+
+.markdown-body ::deep h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 1.6rem 0 0.6rem;
+}
+
+.markdown-body ::deep p {
+    margin: 0 0 0.9rem;
+}
+
+.markdown-body ::deep ul,
+.markdown-body ::deep ol {
+    margin: 0 0 0.9rem;
+    padding-left: 1.5rem;
+}
+
+.markdown-body ::deep li {
+    margin-bottom: 0.25rem;
+}
+
+.markdown-body ::deep code {
+    background-color: var(--paper-sunk);
+    padding: 0.1rem 0.35rem;
+    border-radius: 2px;
+    font-size: 0.85em;
+    color: var(--ink);
+    border: 1px solid var(--rule);
+}
+
+.markdown-body ::deep pre {
+    background-color: var(--paper-sunk);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.85rem 1rem;
+    overflow-x: auto;
+    margin: 0 0 1.1rem;
+    font-size: 0.85rem;
+    line-height: 1.55;
+}
+
+.markdown-body ::deep pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+}
+
+.markdown-body ::deep blockquote {
+    border-left: 3px solid var(--rule-strong);
+    padding: 0.1rem 0 0.1rem 1rem;
+    margin: 0 0 1rem;
+    color: var(--ink-soft);
+    font-style: italic;
+}
+
+.markdown-body ::deep table {
+    border-collapse: collapse;
+    margin: 0 0 1.2rem;
+    width: 100%;
+    font-size: 0.88rem;
+}
+
+.markdown-body ::deep th,
+.markdown-body ::deep td {
+    border: 1px solid var(--rule);
+    padding: 0.45rem 0.7rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+.markdown-body ::deep th {
+    background-color: var(--paper-sunk);
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+}
+
+.markdown-body ::deep a {
+    color: var(--accent);
+}
+
+.markdown-body ::deep hr {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 2rem 0;
+}
+
+.markdown-body ::deep strong {
+    font-weight: 600;
+}

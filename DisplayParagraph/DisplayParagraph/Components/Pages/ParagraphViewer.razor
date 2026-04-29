@@ -10,6 +10,49 @@
 
 <h2>Chapter IV Paragraph Viewer</h2>
 
+<p class="page-byline">
+    Resolves which verses of a Chapter IV reimbursement paragraph apply to a given patient,
+    doctor and prescription type on a reference date, and summarises whether the paragraph
+    as a whole is theoretically applicable.
+</p>
+
+<details class="page-howto">
+    <summary>How to read this page</summary>
+    <div class="page-howto-body">
+        <ul>
+            <li>
+                <strong>Verdict callout</strong> — green = no patient/doctor/request restriction is violated;
+                red = a mandatory restriction can&rsquo;t be satisfied; amber = a relevant input is missing
+                (e.g. patient sex unspecified, but the paragraph contains a sex-restricted choice).
+            </li>
+            <li>
+                <strong>Yellow rows</strong> mark verses the patient/doctor fail individually.
+                A yellow row can still leave the overall verdict green if it sits in an <em>optional</em>
+                branch &mdash; the rollup considers the verse tree as a whole.
+            </li>
+            <li>
+                <strong>Indentation</strong> reflects <code>VerseLevel</code>; the
+                <span class="text-muted">&#9744;</span> glyph marks a checkbox alternative inside a choice group.
+            </li>
+            <li>
+                <strong>Sex / Age limits / Qual.</strong> show the verse&rsquo;s own restrictions when present.
+                Empty cells mean the verse imposes no restriction on that axis.
+            </li>
+            <li>
+                <strong>Req.</strong> &mdash; <code>N</code> = new prescription only,
+                <code>P</code> = renewal only, blank = either.
+            </li>
+            <li>
+                <strong>EXCL chip</strong> &mdash; an exclusion verse, phrased as <em>&ldquo;X is not authorised&rdquo;</em>.
+                Visually flagged but treated identically by the applicability check (see docs for nuance).
+            </li>
+        </ul>
+        <p class="page-howto-link">
+            <a href="/docs/chapter-iv-applicability">Read the full applicability docs &rarr;</a>
+        </p>
+    </div>
+</details>
+
 <div class="filter-bar">
     <div class="filter-row">
         <div class="filter-field" style="flex: 0 0 14rem">
