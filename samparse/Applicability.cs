@@ -40,19 +40,20 @@ public sealed class ChapterIvIndex
 public static class ApplicabilityChecker
 {
     public static ApplicabilityResult VerseCompatible(
-        VerseDataType data, PatientContext patient, DoctorContext doctor, bool? isRenewal, DateTime date, ChapterIvIndex index)
+        VerseDataType verse, PatientContext patient, DoctorContext doctor, bool? isRenewal, DateTime date, ChapterIvIndex index)
     {
         var checks = new[]
         {
-            CheckSex(data, patient),
-            CheckAge(data, patient, date),
-            CheckQualification(data, doctor, date, index),
-            CheckRequestType(data, isRenewal),
+            CheckSex(verse, patient),
+            CheckAge(verse, patient, date),
+            CheckQualification(verse, doctor, date, index),
+            CheckRequestType(verse, isRenewal),
         };
-        return
-            checks.Any(r => r == ApplicabilityResult.NotApplicable) ? ApplicabilityResult.NotApplicable :
-            checks.Any(r => r == ApplicabilityResult.Unknown)       ? ApplicabilityResult.Unknown :
-                                                                      ApplicabilityResult.Applicable;
+        
+        var applicabilityResult = checks.Any(r => r == ApplicabilityResult.NotApplicable) ? ApplicabilityResult.NotApplicable
+                : checks.Any(r => r == ApplicabilityResult.Unknown)  ? ApplicabilityResult.Unknown : ApplicabilityResult.Applicable;
+
+        return applicabilityResult;
     }
 
     public static ApplicabilityResult CouldApplyTo(
@@ -147,15 +148,14 @@ public static class ApplicabilityChecker
         return Combine(rootSeqs.Select(EvaluateChoice));
     }
 
-    private static ApplicabilityResult CheckSex(VerseDataType data, PatientContext patient) =>
-        !data.SexRestrictedSpecified    ? ApplicabilityResult.Applicable :
-        patient.Sex is null             ? ApplicabilityResult.Unknown :
-        data.SexRestricted == patient.Sex ? ApplicabilityResult.Applicable :
-                                              ApplicabilityResult.NotApplicable;
+    private static ApplicabilityResult CheckSex(VerseDataType verse, PatientContext patient) =>
+        !verse.SexRestrictedSpecified ? ApplicabilityResult.Applicable
+            : patient.Sex is null ? ApplicabilityResult.Unknown 
+                : verse.SexRestricted == patient.Sex ? ApplicabilityResult.Applicable : ApplicabilityResult.NotApplicable;
 
-    private static ApplicabilityResult CheckAge(VerseDataType data, PatientContext patient, DateTime date)
+    private static ApplicabilityResult CheckAge(VerseDataType verse, PatientContext patient, DateTime date)
     {
-        if (!data.MinimumAgeAuthorizedSpecified && !data.MaximumAgeAuthorizedSpecified)
+        if (!verse.MinimumAgeAuthorizedSpecified && !verse.MaximumAgeAuthorizedSpecified)
             return ApplicabilityResult.Applicable;
         if (patient.DateOfBirth is null) return ApplicabilityResult.Unknown;
 
@@ -163,12 +163,12 @@ public static class ApplicabilityChecker
         var refDate = DateOnly.FromDateTime(date);
 
         // Min is inclusive: patient must have reached the Nth-unit anniversary.
-        if (data.MinimumAgeAuthorizedSpecified &&
-            AddDuration(dob, WholeUnits(data.MinimumAgeAuthorized), data.MinimumAgeAuthorizedUnit) > refDate)
+        if (verse.MinimumAgeAuthorizedSpecified &&
+            AddDuration(dob, WholeUnits(verse.MinimumAgeAuthorized), verse.MinimumAgeAuthorizedUnit) > refDate)
             return ApplicabilityResult.NotApplicable;
         // Max is strict: patient must not yet have reached the (N+1)th-unit anniversary.
-        if (data.MaximumAgeAuthorizedSpecified &&
-            AddDuration(dob, WholeUnits(data.MaximumAgeAuthorized) + 1, data.MaximumAgeAuthorizedUnit) <= refDate)
+        if (verse.MaximumAgeAuthorizedSpecified &&
+            AddDuration(dob, WholeUnits(verse.MaximumAgeAuthorized) + 1, verse.MaximumAgeAuthorizedUnit) <= refDate)
             return ApplicabilityResult.NotApplicable;
 
         return ApplicabilityResult.Applicable;
